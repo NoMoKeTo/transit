@@ -73,7 +73,7 @@ class WayType(Serializable):
     def __new__(cls, value=''):
         if isinstance(value, cls):
             return value
-        elif value not in cls._known:
+        elif value not in cls._known and not value.startswith("unknown:"):
             raise AttributeError('invalid waytype: %s' % repr(value))
         if value in cls._created:
             return cls._created[value]
