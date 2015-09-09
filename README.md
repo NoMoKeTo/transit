@@ -1,6 +1,6 @@
-# choo [![Docs](https://readthedocs.org/projects/choo/badge/?version=latest)](https://choo.readthedocs.org/en/latest/) [![Build Status](https://travis-ci.org/NoMoKeTo/choo.svg)](https://travis-ci.org/NoMoKeTo/choo)
+# choo [![Docs](https://readthedocs.org/projects/choo/badge/?version=latest)](https://choo.readthedocs.org/en/latest) [![Build Status](https://travis-ci.org/NoMoKeTo/choo.svg)](https://travis-ci.org/NoMoKeTo/choo)
 
-choo is a python3 library providing a uniform interface for public transport APIs. A JSON interface is available via command line and HTTP to use it with other languages.
+choo is a uniform interface for public transport APIs written in Python 3. A JSON interface is available via command line and HTTP to use it with other languages.
 
 ![UML Model Overview](uml.png)
 

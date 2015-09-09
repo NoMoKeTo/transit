@@ -2,7 +2,7 @@ Getting Started
 ===============
 
 The Choo Data Model
-----------------------
+-------------------
 
 Before we start using choo, you have to understand its underlying Models.
 
