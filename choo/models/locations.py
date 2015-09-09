@@ -3,10 +3,37 @@ from .base import Serializable, Searchable, Collectable
 from . import fields
 
 
-class Coordinates(Serializable):
-    lat = fields.Field(float, none=False)
-    lon = fields.Field(float, none=False)
+class GeoLocation(Serializable):
+    lat = fields.Field(float)
+    lon = fields.Field(float)
 
+    def __init__(self, **kwargs):
+        if self.__class__ == GeoLocation:
+            raise RuntimeError('Only instances of GeoLocation subclasses are allowed!')
+        super().__init__(**kwargs)
+
+    def __eq__(self, other):
+        return (isinstance(other, GeoLocation) and
+                self.lat is not None and other.lat == self.lat and
+                self.lon is not None and other.lon == self.lon)
+
+    def __repr__(self):
+        return 'GeoLocation(%.6f, %.6f)' % (self.lat, self.lon)
+
+    def _near(self, other):
+        return (self.lat is not None and other.lat is not None and
+                self.lon is not None and other.lon is not None and
+                abs(self.lat - other.lat) < 0.02 and
+                abs(self.lon - other.lon) < 0.02)
+
+    def _not_too_far(self, other):
+        return ((self.lat is not None and other.lat is not None and
+                 self.lon is not None and other.lon is not None) and
+                (abs(self.lat - other.lat) < 0.04 or
+                 abs(self.lon - other.lon) < 0.04))
+
+
+class Coordinates(GeoLocation):
     def __init__(self, lat=None, lon=None, **kwargs):
         super().__init__(lat=lat, lon=lon, **kwargs)
 
@@ -17,41 +44,8 @@ class Coordinates(Serializable):
     def unserialize(cls, data):
         return cls(*data)
 
-    def __eq__(self, other):
-        return isinstance(other, Coordinates) and other.lat == self.lat and other.lon == self.lon
 
-    def __repr__(self):
-        return 'Coordinates(%.6f, %.6f)' % (self.lat, self.lon)
-
-
-class AbstractLocation(Collectable):
-    coords = fields.Model(Coordinates)
-
-    def __init__(self, **kwargs):
-        # magic, do not remove
-        super().__init__(**kwargs)
-
-    def __repr__(self):
-        return 'AbstractLocation(%s)' % (repr(self.coords) if self.coords else '')
-
-    def _near(self, other):
-        return (self.coords is not None and other.coords is not None and
-                abs(self.coords.lat - other.coords.lat) < 0.02 and
-                abs(self.coords.lon - other.coords.lon) < 0.02)
-
-    def _not_too_far(self, other):
-        return ((self.coords is not None and other.coords is not None) and
-                (abs(self.coords.lat - other.coords.lat) < 0.04 or
-                 abs(self.coords.lon - other.coords.lon) < 0.04))
-
-    def __eq__(self, other):
-        return self.coords == other.coords
-
-    def __ne__(self, other):
-        return self.coords != other.coords
-
-
-class Platform(AbstractLocation):
+class Platform(Collectable, GeoLocation):
     stop = fields.Model('Stop', none=False)
     ifopt = fields.Field(str)
     name = fields.Field(str)
@@ -83,13 +77,15 @@ class Platform(AbstractLocation):
         return None
 
 
-class Location(AbstractLocation):
+class Location(Collectable, GeoLocation):
     country = fields.Field(str)
     city = fields.Field(str)
     name = fields.Field(str)
     near_stops = fields.Model('Stop.Results')
 
     def __init__(self, country=None, city=None, name=None, **kwargs):
+        if self.__class__ == Location:
+            raise RuntimeError('Only instances of Location subclasses are allowed!')
         super().__init__(country=country, city=city, name=name, **kwargs)
 
     def __repr__(self):
@@ -151,7 +147,7 @@ class Stop(Location):
         if by_id is True:
             return True
 
-        if (self.full_name is not None and
+        if (self.full_name is not None and other.full_name is not None and
                 self.full_name.replace(',', '') == other.full_name.replace(',', '')):
             return True
 

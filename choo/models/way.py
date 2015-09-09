@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 from .base import Serializable, TripPart
-from .locations import AbstractLocation, Coordinates
+from .locations import GeoLocation, Coordinates
 from . import fields
 
 
 class Way(TripPart):
     waytype = fields.Model('WayType', none=False)
-    origin = fields.Model(AbstractLocation, none=False)
-    destination = fields.Model(AbstractLocation, none=False)
+    origin = fields.Model(GeoLocation, none=True)
+    destination = fields.Model(GeoLocation, none=True)
     distance = fields.Field(float)
     duration = fields.Timedelta()
     events = fields.List(fields.Model('WayEvent', none=False))

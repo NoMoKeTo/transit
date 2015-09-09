@@ -7,7 +7,10 @@ import copy
 class MetaSerializable(type):
     def __new__(mcs, name, bases, attrs):
         class_ = super(MetaSerializable, mcs).__new__(mcs, name, bases, attrs)
-        class_._fields = class_._fields.copy()
+        class_._fields = OrderedDict()
+        for base in class_.__bases__:
+            if base != object:
+                class_._fields.update(base._fields)
         class_._fields.update(OrderedDict(sorted(
             [(n, v) for n, v in attrs.items() if isinstance(v, fields.Field)],
             key=lambda v: v[1].i)

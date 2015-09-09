@@ -84,8 +84,8 @@ class EFA(API):
         model = location.Model if isinstance(location, Location.Request) else location.__class__
 
         if name is None:
-            if location.coords is not None:
-                r = {'type': 'coord', 'name': '%.6f:%.6f:WGS84' % (reversed(location.coords))}
+            if location.lat is not None and location.lon is not None:
+                r = {'type': 'coord', 'name': '%.6f:%.6f:WGS84' % (location.lon, location.lat)}
             else:
                 r = {'type': 'stop', 'place': city, 'name': ''}
         elif issubclass(model, Stop):
@@ -367,7 +367,8 @@ class EFA(API):
             stop.ifopt = ':'.join((gid[1], gid[2]))
 
         if 'x' in data.attrib:
-            stop.coords = Coordinates(float(data.attrib['y']) / 1000000, float(data.attrib['x']) / 1000000)
+            stop.lat = float(data.attrib['y']) / 1000000
+            stop.lon = float(data.attrib['x']) / 1000000
 
         return stop
 
@@ -455,7 +456,8 @@ class EFA(API):
 
         # Coordinates
         if 'x' in data.attrib:
-            location.coords = Coordinates(float(data.attrib['y']) / 1000000, float(data.attrib['x']) / 1000000)
+            location.lat = float(data.attrib['y']) / 1000000
+            location.lon = float(data.attrib['x']) / 1000000
 
         return location, score
 
@@ -707,9 +709,8 @@ class EFA(API):
                 ride.append(None)
 
             segment = ride[first:last]
-            platform_coords = [p.platform.coords for p in segment]
-            if None not in platform_coords:  # todo
-                paths = self._parse_path(path, platform_coords)[:-1]
+            if not [1 for p in segment if (p.platform.lat is None or p.platform.lon is None)]:  # todo
+                paths = self._parse_path(path, [p.platform for p in segment])[:-1]
                 for i, point in segment.items():
                     if not paths:
                         break
@@ -942,7 +943,8 @@ class EFA(API):
                 platform.ifopt = ':'.join(ifopt)
 
         if data.attrib.get('x'):
-            platform.coords = Coordinates(float(data.attrib['y']) / 1000000, float(data.attrib['x']) / 1000000)
+            platform.lat = float(data.attrib['y']) / 1000000
+            platform.lon = float(data.attrib['x']) / 1000000
 
         result = TimeAndPlace(platform)
         result.arrival, result.departure, result.passthrough = self._parse_timeandplace_time(data)

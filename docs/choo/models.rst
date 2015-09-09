@@ -105,23 +105,6 @@ Main Models
 
 Submodels of :py:class:`Collectable`.
 
-.. py:class:: AbstractLocation
-
-    Base class for everything that has a fixed position.
-
-    .. attribute:: coords
-
-        The :py:class:`Coordinates` of this location.
-
-    .. py:class:: AbstractLocation.Request
-
-        Submodel of :py:class:`Searchable.Request`.
-
-    .. py:class:: AbstractLocation.Results
-
-        Submodel of :py:class:`Searchable.Results`.
-
-
 .. py:class:: Ride(line=None, number=None)
 
     A ride is implemented as a list of :py:class:`TimeAndPlace` objects.
@@ -256,11 +239,35 @@ Submodels of :py:class:`Collectable`.
 Locations
 ---------
 
-Submodels of :py:class:`AbstractLocation`.
+Submodel of Serializable
+
+.. py:class:: GeoLocation
+
+    Base class for everything that has a fixed position.
+
+    .. note::
+        You can not create instances of this class, only of its subclasses!
+
+    .. attribute:: lat
+
+        latitude as float
+
+    .. attribute:: lon
+
+        longitude as float
+
+
+.. py:class:: Coordinates(lat, lon)
+
+    A :py:class:`GeoLocation` describing just geographic coordinate.
+
+    .. note::
+        The serialized representation of this model is a ``(lat, lon)`` tuple.
+
 
 .. py:class:: Platform(stop, name=None, full_name=None)
 
-    An :py:class:`AbstractLocation` where rides stop (e.g. Gleis 7). It belongs to one :py:class:`Stop`.
+    An :py:class:`Collectable` :py:class:`GeoLocation` where rides stop (e.g. Gleis 7). It belongs to one :py:class:`Stop`.
 
     .. attribute:: ifopt
 
@@ -280,16 +287,19 @@ Submodels of :py:class:`AbstractLocation`.
 
     .. py:class:: Platform.Request
 
-        Submodel of :py:class:`AbstractLocation.Request`.
+        Submodel of :py:class:`Searchable.Request`.
 
     .. py:class:: Platform.Results
 
-        Submodel of :py:class:`AbstractLocation.Results`.
+        Submodel of :py:class:`Searchable.Results`.
 
 
 .. py:class:: Location(country=None, city=None, name=None)
 
-    An :py:class:`AbstractLocation` that is named and not a sublocation like a Platform.
+    Base class for a :py:class:`Collectable` :py:class:`GeoLocation` that is named and not a sublocation like a :py:class:`Platform`.
+
+    .. note::
+        You can not create instances of this class, only of its subclasses!
 
     .. attribute:: country
 
@@ -305,11 +315,11 @@ Submodels of :py:class:`AbstractLocation`.
 
     .. attribute:: near_stops
 
-        Other stops near this one as a ``Stop.Results``, if available. You can always search for Stops near an :py:class:`AbstractLocation` directly using ``AbstractLocation.Request``.
+        Other stops near this one as a ``Stop.Results``, if available. You can always search for Stops near a :py:class:`GeoLocation` directly using ``Stop.Request``.
 
     .. py:class:: Location.Request
 
-        Submodel of :py:class:`AbstractLocation.Request`.
+        Submodel of :py:class:`Searchable.Request`.
 
         .. attribute:: name
 
@@ -321,7 +331,7 @@ Submodels of :py:class:`AbstractLocation`.
 
     .. py:class:: Location.Results
 
-        Submodel of :py:class:`AbstractLocation.Results`.
+        Submodel of :py:class:`Searchable.Results`.
 
 
 .. py:class:: Stop(country=None, city=None, name=None)
@@ -399,7 +409,7 @@ Submodel of :py:class:`Searchable`.
 
 .. py:class:: Trip
 
-    A connection from a :py:class:`AbstractLocation` to another :py:class:`AbstractLocation`.
+    A connection from a :py:class:`GeoLocation` to another :py:class:`GeoLocation`.
 
     It consists of a list of :py:class:`RideSegment` and :py:class:`Way` objects. Just iterate over it to get its elements.
 
@@ -416,19 +426,19 @@ Submodel of :py:class:`Searchable`.
 
     .. attribute:: origin
 
-        The start :py:class:`AbstractLocation` of this trip.
+        The start :py:class:`GeoLocation` of this trip.
 
     .. attribute:: destination
 
-        The end :py:class:`AbstractLocation` of this trip.
+        The end :py:class:`GeoLocation` of this trip.
 
     .. attribute:: departure
 
-        The departure at the first :py:class:`AbstractLocation` of this trip as :py:class:`RealtimeTime`. (If there are leading :py:class:`Way` objects they need to have the ``duration`` attribute set in order for this to work)
+        The departure at the first :py:class:`GeoLocation` of this trip as :py:class:`RealtimeTime`. (If there are leading :py:class:`Way` objects they need to have the ``duration`` attribute set in order for this to work)
 
     .. attribute:: arrival
 
-        The arrival at the last :py:class:`AbstractLocation` of this trip as :py:class:`RealtimeTime`. (If there are trailing :py:class:`Way` objects they need to have the ``duration`` attribute set in order for this to work)
+        The arrival at the last :py:class:`GeoLocation` of this trip as :py:class:`RealtimeTime`. (If there are trailing :py:class:`Way` objects they need to have the ``duration`` attribute set in order for this to work)
 
     .. attribute:: linetypes
 
@@ -455,11 +465,11 @@ Submodel of :py:class:`Searchable`.
 
         .. attribute:: origin
 
-            **Not None.** The start :py:class:`AbstractLocation` of the trip.
+            **Not None.** The start :py:class:`GeoLocation` of the trip.
 
         .. attribute:: destination
 
-            **Not None.** The end :py:class:`AbstractLocation` of the trip.
+            **Not None.** The end :py:class:`GeoLocation` of the trip.
 
         .. attribute:: departure
 
@@ -533,11 +543,11 @@ Submodel of :py:class:`Searchable`.
 
         .. attribute:: origin
 
-            **Not None.** The start :py:class:`AbstractLocation` of the trip.
+            **Not None.** The start :py:class:`GeoLocation` of the trip.
 
         .. attribute:: destination
 
-            **Not None.** The end :py:class:`AbstractLocation` of the trip.
+            **Not None.** The end :py:class:`GeoLocation` of the trip.
 
 
 
@@ -870,19 +880,3 @@ Submodels of :py:class:`Serializable`.
 
     .. note::
         The serialized representation of this model is a ``(name, direction)`` tuple.
-
-
-.. py:class:: Coordinates(lat, lon)
-
-    A geographic coordinate.
-
-    .. attribute:: lat
-
-        latitude as float
-
-    .. attribute:: longitude
-
-        longitude as float
-
-    .. note::
-        The serialized representation of this model is a ``(lat, lon)`` tuple.

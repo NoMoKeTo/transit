@@ -19,11 +19,11 @@ Before we start using choo, you have to understand its underlying Models.
     A Line is a name for a group of Rides (e.g. Bus Line 495). Every Ride belongs to one Line.
 
 **Trip**
-    A Trip is a connection between two Stops (or AbstractLocations to be precise, see below) with rides, interchanges and/or footpaths in between.
+    A Trip is a connection between two Stops (or GeoLocations to be precise, see below) with rides, interchanges and/or footpaths in between.
 
 The models **Stop**, **Adress** and **POI** (Point of Interest) are all subclasses of **Location** which describes a stand-alone Location with City and Name
 
-Also, **Location** and **Platform** are subclasses of **AbstractLocation** which describes anything that has a static position.
+Also, **Location** and **Platform** are subclasses of **GeoLocation** which describes anything that has a static position.
 
 Those models are called **Searchables** because you can search for them with choo. You can...
 
@@ -33,7 +33,7 @@ Those models are called **Searchables** because you can search for them with cho
 Some other Models that are part of choo but can not be searched for:
 
 **Way**
-    A path between two AbstractLocation objects.
+    A path between two GeoLocation objects.
 
 **TimeAndPlace**
     A time and place object describes the time, stop and platform and coordinates where a ride meets a stop.
@@ -44,9 +44,6 @@ Some other Models that are part of choo but can not be searched for:
 
 **RealtimeTime**
     Points in time are always given as a RealtimeTime object, which consists of a datetime and a delay (if known).
-
-**Coordinates**
-    Each ``AbstractLocation`` may have Coordinates. They consist of latitude and longitude.
 
 **WayType**
     Each Way has a waytype. A WayType has one of the values ``walk``, ``bike``, ``car`` or ``taxi``

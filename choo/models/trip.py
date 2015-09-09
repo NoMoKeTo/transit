@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from .base import Searchable, TripPart
 from .way import WayType
-from .locations import Location, AbstractLocation
+from .locations import Location, GeoLocation
 from .ride import Ride, RideSegment
 from .line import Line, LineType, LineTypes
 from .tickets import TicketList
@@ -19,9 +19,9 @@ class Trip(Searchable):
 
     class Request(Searchable.Request):
         walk_speed = fields.Field(str, default='normal')
-        origin = fields.Model(AbstractLocation)
-        via = fields.List(fields.Model(AbstractLocation))
-        destination = fields.Model(Location)
+        origin = fields.Model(GeoLocation)
+        via = fields.List(fields.Model(GeoLocation))
+        destination = fields.Model(GeoLocation)
         departure = fields.Model(datetime)
         arrival = fields.Model(datetime)
         linetypes = fields.Model(LineTypes)
@@ -77,9 +77,9 @@ class Trip(Searchable):
             return True
 
     class Results(Searchable.Results):
-        origin = fields.Model(Location, none=False)
-        via = fields.Model(Location)
-        destination = fields.Model(Location, none=False)
+        origin = fields.Model(Location, none=True)
+        via = fields.Model(Location, none=True)
+        destination = fields.Model(Location, none=True)
 
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
