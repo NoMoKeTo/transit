@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from .base import Collectable, TripPart
 from .locations import Coordinates
-from .timeandplace import TimeAndPlace
+from .ridepoint import RidePoint
 from .line import Line
 from . import fields
 
@@ -25,7 +25,7 @@ class Ride(Collectable):
         assert isinstance(self._stops, list)
         for k, v in self._stops:
             assert isinstance(k, Ride.StopPointer)
-            assert v is None or isinstance(v, TimeAndPlace)
+            assert v is None or isinstance(v, RidePoint)
 
         # _paths
         assert isinstance(self._paths, dict)
@@ -48,7 +48,7 @@ class Ride(Collectable):
         self = super(Ride, cls).unserialize(data)
 
         for s in data.get('stops', []):
-            self.append(TimeAndPlace.unserialize(s) if s is not None else None)
+            self.append(RidePoint.unserialize(s) if s is not None else None)
 
         for i, path in data.get('paths', {}).items():
             self._paths[self.pointer(int(i))] = [Coordinates.unserialize(p) for p in path]
@@ -89,7 +89,7 @@ class Ride(Collectable):
             return self._stops[int(key)][1]
 
     def __setitem__(self, key, item):
-        assert isinstance(item, TimeAndPlace) or item is None
+        assert isinstance(item, RidePoint) or item is None
         self._stops[int(key)][1] = item
 
     def __delitem__(self, key):
@@ -110,20 +110,20 @@ class Ride(Collectable):
             stop[0]._i += diff
 
     def append(self, item):
-        assert isinstance(item, TimeAndPlace) or item is None
+        assert isinstance(item, RidePoint) or item is None
         pointer = Ride.StopPointer(len(self._stops))
         self._stops.append((pointer, item))
         return pointer
 
     def prepend(self, item):
-        assert isinstance(item, TimeAndPlace) or item is None
+        assert isinstance(item, RidePoint) or item is None
         pointer = Ride.StopPointer(0)
         self._stops.insert(0, (pointer, item))
         self._alter_pointers_after(0, 1)
         return pointer
 
     def insert(self, position, item):
-        assert isinstance(item, TimeAndPlace) or item is None
+        assert isinstance(item, RidePoint) or item is None
         position = max(0, min(position, len(self._stops)))
         pointer = Ride.StopPointer(position)
         self._stops.insert(position, (pointer, item))

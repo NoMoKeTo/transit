@@ -6,12 +6,10 @@ from .trip import Trip
 from .tickets import TicketList, TicketData
 from .ride import Ride, RideSegment
 from .way import Way, WayType, WayEvent
-from .timeandplace import TimeAndPlace
-from .realtime import RealtimeTime
+from .ridepoint import RidePoint, LiveTime
 
 
 __all__ = ['Serializable', 'Searchable', 'Collectable', 'TripPart', 'GeoLocation',
            'Coordinates', 'Platform', 'Location', 'Stop', 'Address', 'POI', 'Line',
-           'LineType', 'LineTypes', 'RealtimeTime', 'TimeAndPlace', 'Platform',
-           'Ride', 'RideSegment', 'Trip', 'Way', 'WayType', 'WayEvent', 'TicketList',
-           'TicketData']
+           'LineType', 'LineTypes', 'LiveTime', 'RidePoint', 'Platform', 'Ride',
+           'RideSegment', 'Trip', 'Way', 'WayType', 'WayEvent', 'TicketList', 'TicketData']

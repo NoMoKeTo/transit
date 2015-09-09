@@ -107,15 +107,15 @@ Submodels of :py:class:`Collectable`.
 
 .. py:class:: Ride(line=None, number=None)
 
-    A ride is implemented as a list of :py:class:`TimeAndPlace` objects.
+    A ride is implemented as a list of :py:class:`RidePoint` objects.
 
     Although a :py:class:`Ride` is iterable, most of the time not all stops of the rides are known and the list of known stations can change. This makes the use of integer indices impossible. To avoid this problem, dynamic indices are used for a :py:class:`Ride`.
 
-    If you iterate over a :py:class:`Ride` each item you get is ``None`` or a :py:class:`TimeAndPlace` object. Each item that is ``None`` stands for n missing stations. It can also mean that the :py:class:`TimeAndPlace` before and after the item are in fact the same. To get rid of all ``None`` items, pass an incomplete ride to a network API.
+    If you iterate over a :py:class:`Ride` each item you get is ``None`` or a :py:class:`RidePoint` object. Each item that is ``None`` stands for n missing stations. It can also mean that the :py:class:`RidePoint` before and after the item are in fact the same. To get rid of all ``None`` items, pass an incomplete ride to a network API.
 
-    You can use integer indices to get, set or delete single :py:class:`TimeAndPlace` objects which is usefull if you want the first (0) or last (-1). But, as explained above, these integer indices may point to another item when the :py:class:`Ride` changes or becomes more complete.
+    You can use integer indices to get, set or delete single :py:class:`RidePoint` objects which is usefull if you want the first (0) or last (-1). But, as explained above, these integer indices may point to another item when the :py:class:`Ride` changes or becomes more complete.
 
-    If you iterate over ``ride.items()`` you get ``(RideStopPointer, TimeAndPlace)`` tuples. When used as an indice, a :py:class:`Ride.StopPointer` used as an indice will always point to the same :py:class:`TimeAndPlace` object.
+    If you iterate over ``ride.items()`` you get ``(RideStopPointer, RidePoint)`` tuples. When used as an indice, a :py:class:`Ride.StopPointer` used as an indice will always point to the same :py:class:`RidePoint` object.
 
     You can slice a :py:class:`Ride` (using integer indices or :py:class RideStopPointer`) which will get you a :py:class:`RideSegment` that will always have the correct boundaries. Slicing with no start or no end point is also supported.
 
@@ -140,19 +140,19 @@ Submodels of :py:class:`Collectable`.
 
     .. method:: items()
 
-        A ``(RideStopPointer, TimeAndPlace)`` iterator as explained above.
+        A ``(RideStopPointer, RidePoint)`` iterator as explained above.
 
     .. method:: append(item)
 
-        Append a :py:class:`TimeAndPlace` object.
+        Append a :py:class:`RidePoint` object.
 
     .. method:: prepend(item)
 
-        Prepend a :py:class:`TimeAndPlace` object.
+        Prepend a :py:class:`RidePoint` object.
 
     .. method:: insert(position, item)
 
-        Insert a :py:class:`TimeAndPlace` as the new position ``position``.
+        Insert a :py:class:`RidePoint` as the new position ``position``.
 
 
     .. attention::
@@ -166,14 +166,14 @@ Submodels of :py:class:`Collectable`.
 
     .. attribute:: is_complete
 
-        ``True`` if the :py:class:`TimeAndPlace` list is complete and there are no Nones in the list, otherwise ``False``.
+        ``True`` if the :py:class:`RidePoint` list is complete and there are no Nones in the list, otherwise ``False``.
 
     .. py:class:: Ride.StopPointer
 
         See above. Immutable. Do not use this class directly. You can cast it to int.
 
     .. note::
-        For serialization, pointers are not used. The property ``stops`` is created containing with each item being either a serialized :py:class:`TimeAndPlace` object or ``None``.
+        For serialization, pointers are not used. The property ``stops`` is created containing with each item being either a serialized :py:class:`RidePoint` object or ``None``.
 
         The property ``path`` is created containing a dictionary containing paths between consecutive ride stops with the index of the origin stop as keys.
 
@@ -434,11 +434,11 @@ Submodel of :py:class:`Searchable`.
 
     .. attribute:: departure
 
-        The departure at the first :py:class:`GeoLocation` of this trip as :py:class:`RealtimeTime`. (If there are leading :py:class:`Way` objects they need to have the ``duration`` attribute set in order for this to work)
+        The departure at the first :py:class:`GeoLocation` of this trip as :py:class:`LiveTime`. (If there are leading :py:class:`Way` objects they need to have the ``duration`` attribute set in order for this to work)
 
     .. attribute:: arrival
 
-        The arrival at the last :py:class:`GeoLocation` of this trip as :py:class:`RealtimeTime`. (If there are trailing :py:class:`Way` objects they need to have the ``duration`` attribute set in order for this to work)
+        The arrival at the last :py:class:`GeoLocation` of this trip as :py:class:`LiveTime`. (If there are trailing :py:class:`Way` objects they need to have the ``duration`` attribute set in order for this to work)
 
     .. attribute:: linetypes
 
@@ -473,13 +473,13 @@ Submodel of :py:class:`Searchable`.
 
         .. attribute:: departure
 
-            The minimum departure time as :py:class:`RealtimeTime` or ``datetime.datetime``.
+            The minimum departure time as :py:class:`LiveTime` or ``datetime.datetime``.
 
             If both times are ``None`` the behaviour is as if you would have set the departure time to the current time right before sending the request. (Default: ``None``)
 
         .. attribute:: arrival
 
-            The latest allowed arrival as :py:class:`RealtimeTime` or ``datetime.datetime``. (Default: ``None``)
+            The latest allowed arrival as :py:class:`LiveTime` or ``datetime.datetime``. (Default: ``None``)
 
         .. attribute:: linetypes
 
@@ -578,7 +578,7 @@ Submodels of :py:class:`TripPart`:
 
     .. method:: items()
 
-        A ``(RideStopPointer, TimeAndPlace)`` iterator over this segment.
+        A ``(RideStopPointer, RidePoint)`` iterator over this segment.
 
     All attributes of the :py:class:`Ride` are also directly accessible through a :py:class:`RideSegment`.
 
@@ -594,7 +594,7 @@ Submodels of :py:class:`TripPart`:
 
     .. attribute:: is_complete
 
-        ``True`` if the :py:class:`TimeAndPlace` list of this Segment is complete.
+        ``True`` if the :py:class:`RidePoint` list of this Segment is complete.
 
     .. attribute:: origin
 
@@ -606,11 +606,11 @@ Submodels of :py:class:`TripPart`:
 
     .. attribute:: departure
 
-        The departure at the first :py:class:`Stop` of this segment as :py:class:`RealtimeTime`. Shortcut for ``segment[0].departure``.
+        The departure at the first :py:class:`Stop` of this segment as :py:class:`LiveTime`. Shortcut for ``segment[0].departure``.
 
     .. attribute:: arrival
 
-        The arrival at the last :py:class:`Stop` of this segment as :py:class:`RealtimeTime`. Shortcut for ``segment[-1].arrival``.
+        The arrival at the last :py:class:`Stop` of this segment as :py:class:`LiveTime`. Shortcut for ``segment[-1].arrival``.
 
     .. note::
         For serialization, the boundaries are given as integer indexes as properties ``origin`` and ``destination``. Each one can be missing if the boundary is not set. (e.g. ``ride[5:]``)
@@ -654,7 +654,7 @@ Other Models
 
 Submodels of :py:class:`Serializable`.
 
-.. py:class:: TimeAndPlace(platform, arrival=None, departure=None)
+.. py:class:: RidePoint(platform, arrival=None, departure=None)
 
     Time and place of a :py:class:`Ride` stopping at a :py:class:`Platform`.
 
@@ -664,18 +664,18 @@ Submodels of :py:class:`Serializable`.
 
     .. attribute:: arrival
 
-        The arrival time of the :py:class:`Ride` as :py:class:`RealtimeTime`.
+        The arrival time of the :py:class:`Ride` as :py:class:`LiveTime`.
 
     .. attribute:: departure
 
-        The departure time of the :py:class:`Ride` as :py:class:`RealtimeTime`.
+        The departure time of the :py:class:`Ride` as :py:class:`LiveTime`.
 
     .. attribute:: passthrough
 
         A boolean indicating whether the ride does not actualle stop at this :py:class:`Stop` but pass through it.
 
 
-.. py:class:: RealtimeTime(time, delay=None)
+.. py:class:: LiveTime(time, delay=None)
 
     A point in time with optional real time data.
 
@@ -698,7 +698,7 @@ Submodels of :py:class:`Serializable`.
 
         True if there is real time data available. Shortcut for ``delay is not None``
 
-    .. attribute:: livetime
+    .. attribute:: expected_time
 
         The (expected) actual time as a `datetime.datetime` object if real time data is available, otherwise the originally planned time.
 

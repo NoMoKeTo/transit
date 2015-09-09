@@ -35,15 +35,15 @@ Some other Models that are part of choo but can not be searched for:
 **Way**
     A path between two GeoLocation objects.
 
-**TimeAndPlace**
+**RidePoint**
     A time and place object describes the time, stop and platform and coordinates where a ride meets a stop.
 
 **RideSegment**
     In most cases, we are only interested in a part of a Ride – from where you enter the train/bus/etc. to where you leave it.
     That part is called a RideSegment – it consists of a Ride and the start and end point of the segment.
 
-**RealtimeTime**
-    Points in time are always given as a RealtimeTime object, which consists of a datetime and a delay (if known).
+**LiveTime**
+    Points in time are always given as a LiveTime object, which consists of a datetime and a delay (if known).
 
 **WayType**
     Each Way has a waytype. A WayType has one of the values ``walk``, ``bike``, ``car`` or ``taxi``
@@ -163,17 +163,17 @@ We created the Stop, got the network and used the generic .query() function of t
         print(ridesegment.number)  # same as ride.number
 
         # iterate through all stops of the RideSegment
-        for timeandplace in ridesegment:
-            if timeandplace is not None:  # this is not a gap
-                if timeandplace.departure is not None:  # we now the departure
-                    print(timeandplace.departure.time)  # planned time as datetime.datetime
-                    print(timeandplace.departure.delay)  # expceted delay as datetime.datetimeplanned time as datetime.datetime
-                    print(timeandplace.departure.is_live)  # shortcut for delay is not None
-                    print(timeandplace.departure.livetime)  # expceted time if real time information is available, otherwise planned time
-                print(timeandplace.stop.name) # Hauptbahnhof or similar
+        for ridepoint in ridesegment:
+            if ridepoint is not None:  # this is not a gap
+                if ridepoint.departure is not None:  # we now the departure
+                    print(ridepoint.departure.time)  # planned time as datetime.datetime
+                    print(ridepoint.departure.delay)  # expceted delay as datetime.datetimeplanned time as datetime.datetime
+                    print(ridepoint.departure.is_live)  # shortcut for delay is not None
+                    print(ridepoint.departure.expected_time)  # expceted time if real time information is available, otherwise planned time
+                print(ridepoint.stop.name) # Hauptbahnhof or similar
 
         # iterate through all stops of the Ride
-        for timeandplace in ridesegment.ride:
+        for ridepoint in ridesegment.ride:
             # same as above, but without boundaries
 
         # you can also slice a ride or ride segment to get another ride segment

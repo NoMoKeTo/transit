@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from ...models import Searchable
 from ...models import Location, Stop, POI, Address
-from ...models import TimeAndPlace, Platform, RealtimeTime
+from ...models import RidePoint, Platform, LiveTime
 from ...models import Trip, Ride, RideSegment, Coordinates, TicketList, TicketData
 from ...models import Line, LineType, LineTypes, Way, WayType, WayEvent
 from datetime import datetime, timedelta
@@ -138,16 +138,16 @@ class EFA(API):
         arrival = triprequest.arrival
 
         if isinstance(departure, datetime):
-            departure = RealtimeTime(departure)
+            departure = LiveTime(departure)
         if isinstance(arrival, datetime):
-            arrival = RealtimeTime(arrival)
+            arrival = LiveTime(arrival)
 
         if departure is not None:
             deparr = 'dep'
-            time_ = departure.livetime
+            time_ = departure.expected_time
         elif arrival is not None:
             deparr = 'arr'
-            time_ = arrival.livetime
+            time_ = arrival.expected_time
         else:
             deparr = 'dep'
             time_ = now
@@ -476,7 +476,7 @@ class EFA(API):
                 ride.line.linetype = LineType('train.longdistance')
 
             # Build Ride Objekt with known stops
-            mypoint = self._parse_timeandplace(departure)  # todo: take delay and add it to next stops
+            mypoint = self._parse_ridepoint(departure)  # todo: take delay and add it to next stops
 
             before_delay = after_delay = None
             if mypoint.arrival:
@@ -491,15 +491,15 @@ class EFA(API):
                     delay = timedelta(minutes=delay)
 
             if delay is not None:
-                if ((mypoint.arrival and servernow < mypoint.arrival.livetime) or
-                        (mypoint.departure and servernow < mypoint.departure.livetime)):
+                if ((mypoint.arrival and servernow < mypoint.arrival.expected_time) or
+                        (mypoint.departure and servernow < mypoint.departure.expected_time)):
                     before_delay = delay
                 else:
                     after_delay = delay
 
             prevs = False
             for pointdata in departure.findall('./itdPrevStopSeq/itdPoint'):
-                point = self._parse_timeandplace(pointdata)
+                point = self._parse_ridepoint(pointdata)
                 if point is not None:
                     if before_delay is not None:
                         if (point.arrival is not None and point.arrival.delay is None and
@@ -515,7 +515,7 @@ class EFA(API):
 
             onwards = False
             for pointdata in departure.findall('./itdOnwardStopSeq/itdPoint'):
-                point = self._parse_timeandplace(pointdata)
+                point = self._parse_ridepoint(pointdata)
                 if point is not None:
                     if after_delay is not None:
                         if (point.arrival is not None and point.arrival.delay is None and
@@ -530,11 +530,11 @@ class EFA(API):
             if not prevs and not onwards:
                 ride.prepend(None)
                 if origin is not None:
-                    ride.prepend(TimeAndPlace(Platform(origin)))
+                    ride.prepend(RidePoint(Platform(origin)))
 
                 ride.append(None)
                 if destination is not None:
-                    ride.append(TimeAndPlace(Platform(destination)))
+                    ride.append(RidePoint(Platform(destination)))
 
             # Return RideSegment from the Station we depart from on
             results.append(ride[pointer:])
@@ -628,7 +628,7 @@ class EFA(API):
 
     def _parse_trippart(self, data):
         """ Parses itdPartialRoute into a RideSegment or Way """
-        points = [self._parse_timeandplace(point) for point in data.findall('./itdPoint')]
+        points = [self._parse_ridepoint(point) for point in data.findall('./itdPoint')]
 
         path = []
         for coords in data.findall('./itdPathCoordinates/itdCoordinateBaseElemList/itdCoordinateBaseElem'):
@@ -677,7 +677,7 @@ class EFA(API):
             first = last = None
             waypoints = False
             if data.find('./itdStopSeq'):
-                new_points = [self._parse_timeandplace(point)
+                new_points = [self._parse_ridepoint(point)
                               for point in data.findall('./itdStopSeq/itdPoint')]
                 if not new_points or new_points[0].stop != new_points[0].stop:
                     new_points.insert(0, points[0])
@@ -697,14 +697,14 @@ class EFA(API):
             if origin is not None:
                 if origin != ride[0].stop:
                     ride.prepend(None)
-                    ride.prepend(TimeAndPlace(Platform(origin)))
+                    ride.prepend(RidePoint(Platform(origin)))
             else:
                 ride.prepend(None)
 
             if destination is not None:
                 if destination != ride[-1].stop:
                     ride.append(None)
-                    ride.append(TimeAndPlace(Platform(destination)))
+                    ride.append(RidePoint(Platform(destination)))
             else:
                 ride.append(None)
 
@@ -900,8 +900,8 @@ class EFA(API):
 
         return ride, origin, destination
 
-    def _parse_timeandplace(self, data):
-        """ Parse a trip Point into a TimeAndPlace (including the Location) """
+    def _parse_ridepoint(self, data):
+        """ Parse a trip Point into a RidePoint (including the Location) """
         city = self._get_attrib(data, 'locality', 'place')
         name = self._get_attrib(data, 'nameWO')
         full_name = self._get_attrib(data, 'name', 'stopName')
@@ -946,11 +946,11 @@ class EFA(API):
             platform.lat = float(data.attrib['y']) / 1000000
             platform.lon = float(data.attrib['x']) / 1000000
 
-        result = TimeAndPlace(platform)
-        result.arrival, result.departure, result.passthrough = self._parse_timeandplace_time(data)
+        result = RidePoint(platform)
+        result.arrival, result.departure, result.passthrough = self._parse_ridepoint_time(data)
         return result
 
-    def _parse_timeandplace_time(self, data):
+    def _parse_ridepoint_time(self, data):
         # There are three ways to describe the time
         if data.attrib.get('usage', ''):
             # Used for routes (only arrival or departure time)
@@ -961,16 +961,16 @@ class EFA(API):
                 times.append(self._parse_datetime(data.find('./itdDateTime')))
 
             plantime = None
-            livetime = None
+            expected_time = None
             if len(times) > 0:
                 plantime = times[0]
             if len(times) == 2:
-                livetime = times[1]
+                expected_time = times[1]
 
             if data.attrib['usage'] == 'departure':
-                return None, RealtimeTime(time=plantime, livetime=livetime), None
+                return None, LiveTime(time=plantime, expected_time=expected_time), None
             elif data.attrib['usage'] == 'arrival':
-                return RealtimeTime(time=plantime, livetime=livetime), None, None
+                return LiveTime(time=plantime, expected_time=expected_time), None, None
 
         elif 'countdown' in data.attrib:
             # Used for departure lists
@@ -980,12 +980,12 @@ class EFA(API):
             if data.find('./itdRTDateTime'):
                 times.append(self._parse_datetime(data.find('./itdRTDateTime')))
 
-            plantime = livetime = None
+            plantime = expected_time = None
             if len(times) > 0:
                 plantime = times[0]
             if len(times) == 2:
-                livetime = times[1]
-            return None, RealtimeTime(time=plantime, livetime=livetime), None
+                expected_time = times[1]
+            return None, LiveTime(time=plantime, expected_time=expected_time), None
 
         else:
             # Also used for routes (arrival and departure time – most times)
@@ -999,11 +999,11 @@ class EFA(API):
             if len(times) > 0 and times[0] is not None:
                 delay = int(data.attrib.get('arrDelay', '-1'))
                 delay = timedelta(minutes=delay) if delay >= 0 else None
-                arrival = RealtimeTime(time=times[0], delay=delay)
+                arrival = LiveTime(time=times[0], delay=delay)
 
             if len(times) > 1 and times[1] is not None:
                 delay = int(data.attrib.get('depDelay', '-1'))
                 delay = timedelta(minutes=delay) if delay >= 0 else None
-                departure = RealtimeTime(time=times[1], delay=delay)
+                departure = LiveTime(time=times[1], delay=delay)
 
             return arrival, departure, passthrough
