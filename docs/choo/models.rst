@@ -411,7 +411,7 @@ Submodel of :py:class:`Searchable`.
 
     A connection from a :py:class:`GeoLocation` to another :py:class:`GeoLocation`.
 
-    It consists of a list of :py:class:`RideSegment` and :py:class:`Way` objects. Just iterate over it to get its elements.
+    It consists of a list of :py:class:`TripPart` objects. Just iterate over it to get its elements.
 
     .. attribute:: time
 
@@ -554,7 +554,13 @@ Submodel of :py:class:`Searchable`.
 Trip parts
 ----------
 
-Submodels of :py:class:`Serializable`.
+.. py:class:: TripPart
+    Base Class for Trip parts
+
+    .. note::
+        You can not create instances of this class, only of its subclasses!
+
+Submodels of :py:class:`TripPart`:
 
 .. py:class:: RideSegment
     This class created by slicing :py:class:`Ride` objects.

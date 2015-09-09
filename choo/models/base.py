@@ -226,4 +226,7 @@ class Collectable(Searchable):
 
 
 class TripPart(Serializable):
-    pass
+    def __init__(self, **kwargs):
+        if self.__class__ == TripPart:
+            raise RuntimeError('Only instances of TripPart subclasses are allowed!')
+        super().__init__(**kwargs)
