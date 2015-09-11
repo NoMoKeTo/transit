@@ -41,7 +41,8 @@ All public attributes that are not dynamic and not ``None`` are put into a dicti
 
     {
         "type": "Stop",
-        "_ids": {"vrr": 20009289},
+        "id": 20009289,
+        "source": "vrr",
         "country": "de",
         "city": "Essen",
         "name": "Hauptbahnhof",
