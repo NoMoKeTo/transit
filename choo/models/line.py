@@ -71,7 +71,7 @@ class LineType(Serializable):
             cls._created[value] = self
             return self
 
-    def _serialize_instance(self, **kwargs):
+    def serialize(self, **kwargs):
         return self._value
 
     @classmethod

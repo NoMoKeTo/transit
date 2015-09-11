@@ -12,22 +12,16 @@ In Python
     # Create a Stop
     stop = Stop(city='Essen', name='Hauptbahnhof')
 
-    # simple serialization
+    # serialization
     serialized = stop.serialize()
+
+    # unserialize
     stop = Stop.unserialize(serialized)
+    stop = Location.serialize(serialized)  # same result
+    stop = Serializable.serialize(serialized)  # same result
 
-    # possibly typed serialization
-    # this will save the model type if the given object is a submodel
-    serialized = Location.serialize(stop)
-    stop = Location.unserialize(serialized)
-
-    # this will be a simple serialization because the given Model is not a submodel
-    serialized = Stop.serialize(stop)
-    stop = Stop.unserialize(serialized)
-
-    # always typed serialization
-    serialized = Serializable.serialize(stop)
-    stop = Serializable.unserialize(serialized)
+    # this will fail because Stop is not a submodel of Ride
+    stop = Ride.serialize(serialized)
 
 
 How it works
@@ -46,21 +40,10 @@ All public attributes that are not dynamic and not ``None`` are put into a dicti
 .. code-block:: json
 
     {
+        "type": "Stop",
         "_ids": {"vrr": 20009289},
         "country": "de",
         "city": "Essen",
         "name": "Hauptbahnhof",
         "coords": [51.451139, 7.012937]
     }
-
-If the serialization is typed, the output is a two element list with name of the model and the constructed dictionary (or other respresentation).
-
-.. code-block:: json
-
-    ["Stop", {
-        "_ids": {"vrr": 20009289},
-        "country": "de",
-        "city": "Essen",
-        "name": "Hauptbahnhof",
-        "coords": [51.451139, 7.012937]
-    }]

@@ -80,38 +80,37 @@ To do so, we first have to describe Essen Hauptbahnhof as a ``Stop``:
 
 .. code-block:: json
 
-    ["Stop", {
+    {
+      "type": "Stop",
       "name": "Essen Hauptbahnhof"
-    }]
+    }
 
 Now we pass this data to the API. We use the network ``vrr``. ``--pretty`` means that the resulting JSON should be pretty printed.
 
 .. code-block:: none
 
-    $ choo --pretty vrr '["Stop", {"name": "Essen Hauptbahnhof"}]'
+    $ choo --pretty vrr '{"type": "Stop", "name": "Essen Hauptbahnhof"}'
 
 We get the following result:
 
 .. code-block:: json
 
-    [
-      "Stop",
-      {
-        "id": 20009289,
-        "source": "vrr",
-        "coords": [
-          51.451137,
-          7.012941
-        ],
-        "country": "de",
-        "city": "Essen",
-        "name": "Hauptbahnhof",
-        "full_name": "Essen Hbf",
-        "ifopt": "de:5113:9289",
-        "rides": {  },
-        "lines": {  }
-      }
-    ]
+    {
+      "type": "Stop",
+      "id": 20009289,
+      "source": "vrr",
+      "coords": [
+        51.451137,
+        7.012941
+      ],
+      "country": "de",
+      "city": "Essen",
+      "name": "Hauptbahnhof",
+      "full_name": "Essen Hbf",
+      "ifopt": "de:5113:9289",
+      "rides": {  },
+      "lines": {  }
+    }
 
 As you can see, the API returned a Stop with more information.
 
@@ -204,14 +203,17 @@ Just query the Request-submodel of Trip, like explained above. Simple example:
 
 .. code-block:: json
 
-    ["Trip.Request", {
-        "origin:" ["Stop", {
-            "name": "Essen Hauptbahnhof"
-        }],
-        "destination:" ["Stop", {
-            "name": "Dortmund Hauptbahnhof"
-        }]
-    }]
+    {
+      "type": "Trip.Request",
+      "origin": {
+        "type": "Stop",
+        "name": "Essen Hauptbahnhof"
+      },
+      "destination": {
+        "type": "Stop",
+        "name": "Dortmund Hauptbahnhof"
+      }
+    }
 
 .. code-block:: python
 

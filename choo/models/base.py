@@ -26,7 +26,6 @@ class Serializable(metaclass=MetaSerializable):
     _fields = OrderedDict()
 
     def __init__(self, *args, **kwargs):
-        self.serialize = self._serialize_instance
         for name, field in self.__class__._fields.items():
             if name in kwargs and (field.none or kwargs[name] is not None):
                 setattr(self, name, kwargs[name])
@@ -39,30 +38,25 @@ class Serializable(metaclass=MetaSerializable):
                 return False
         return True
 
-    @classmethod
-    def serialize(cls, obj, **kwargs):
-        assert isinstance(obj, cls)
-        if obj.__class__ is cls:
-            return obj.serialize(**kwargs)
-        else:
-            return [obj.__class__._serialized_name(), obj.serialize(**kwargs)]
-
-    def _serialize_instance(self, exclude=[], **kwargs):
+    def serialize(self, exclude=[], **kwargs):
         self.validate()
 
-        data = [((name[1:] if name.startswith('_') else name), field.serialize(getattr(self, name), **kwargs))
-                for name, field in self._fields.items() if name not in exclude]
+        data = [('type', self._serialized_name())]
+        data += [((name[1:] if name.startswith('_') else name), field.serialize(getattr(self, name), **kwargs))
+                 for name, field in self._fields.items() if name not in exclude]
         return OrderedDict((n, v) for n, v in data if v is not None)
 
     @classmethod
     def unserialize(cls, data):
-        if isinstance(data, list) and len(data) == 2:
-            model_, data = data
-            assert model_ in fields.Model._models
-            cls_ = fields.Model._models[model_]
+        assert isinstance(data, (dict, OrderedDict))
+
+        type_ = data.get('type')
+        if type_ is not None and type_ != cls._serialized_name():
+            assert type_ in fields.Model._models
+            cls_ = fields.Model._models[type_]
             assert issubclass(cls_, cls)
             return cls_.unserialize(data)
-        assert isinstance(data, (dict, OrderedDict))
+
         kwargs = {}
         for name, field in cls._fields.items():
             n = name[1:] if name.startswith('_') else name

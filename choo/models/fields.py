@@ -132,7 +132,7 @@ class Model(Field):
     def serialize(self, value, **kwargs):
         if self.none and value is None:
             return None
-        return self.type.serialize(value, **kwargs)
+        return value.serialize(**kwargs)
 
     def unserialize(self, value):
         if self.none and value is None:

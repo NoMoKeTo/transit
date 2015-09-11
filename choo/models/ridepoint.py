@@ -2,7 +2,7 @@
 from .base import Serializable
 from .locations import Platform
 from . import fields
-from time import datetime, timedelta
+from datetime import datetime, timedelta
 
 
 class LiveTime(Serializable):
