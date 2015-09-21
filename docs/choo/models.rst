@@ -175,7 +175,7 @@ Submodels of :py:class:`Collectable`.
     .. note::
         For serialization, pointers are not used. The property ``stops`` is created containing with each item being either a serialized :py:class:`RidePoint` object or ``None``.
 
-        The property ``path`` is created containing a dictionary containing paths between consecutive ride stops with the index of the origin stop as keys.
+        The property ``paths`` is created containing a dictionary containing paths between consecutive ride stops with the index of the origin stop as keys. The paths are arrays of tuple representations of the :py:class:`Coordinates`.
 
     .. py:class:: Ride.Request
 
@@ -234,6 +234,9 @@ Submodels of :py:class:`Collectable`.
 
         Submodel of :py:class:`Searchable.Results`.
 
+    .. note::
+        For serialization, the string representation is used for ``linetype``.
+
 
 
 Locations
@@ -261,8 +264,12 @@ Submodel of Serializable
 
     A :py:class:`GeoLocation` describing just geographic coordinate.
 
-    .. note::
-        The serialized representation of this model is a ``(lat, lon)`` tuple.
+    You can cast :py:class:`Coordinates` to tuple if needed:
+
+    .. code-block:: python
+
+        >>> tuple(Coordinates(51.445555, 7.017253))
+        (51.445555, 7.017253)
 
 
 .. py:class:: Platform(stop, name=None, full_name=None)
@@ -650,6 +657,11 @@ Submodels of :py:class:`TripPart`:
 
         Events on the way (e.g. taking escalators upwards) as a (ordered) list of :py:class:`WayEvent`.
 
+    .. note::
+        For serialization, the string representation is used for ``linetype`` and the :py:class:`WayEvent` objects in ``events``.
+
+        The property ``path`` is a list of tuple representations of :py:class:`Coordinates`.
+
 
 
 
@@ -676,7 +688,7 @@ Submodels of :py:class:`Serializable`.
 
     .. attribute:: passthrough
 
-        A boolean indicating whether the ride does not actualle stop at this :py:class:`Stop` but pass through it.
+        A boolean indicating whether the ride does not actually stop at this :py:class:`Stop` but pass through it.
 
 
 .. py:class:: LiveTime(time, delay=None)
@@ -798,9 +810,6 @@ Submodels of :py:class:`Serializable`.
         >>> str(LineType('train.local'))
         'train.local'
 
-    .. note::
-        The serialized representation of this model is its string representation.
-
 
 .. py:class:: LineTypes(include=('', ), exclude=())
 
@@ -842,7 +851,7 @@ Submodels of :py:class:`Serializable`.
         Make sure that the given line types and all of their subtypes are not matched by the selector.
 
     .. note::
-        For serialization, the properties ``included`` and ``excluded`` are created, each one containing a list of line types.
+        For serialization, the properties ``included`` and ``excluded`` are created, each one containing a list of string representation of line types.
 
 
 .. py:class:: WayType(name)
@@ -863,8 +872,6 @@ Submodels of :py:class:`Serializable`.
         >>> str(WayType('walk'))
         'walk'
 
-    .. note::
-        The serialized representation of this model is its string representation.
 
 .. py:class:: WayEvent(name, direction)
 
@@ -877,6 +884,15 @@ Submodels of :py:class:`Serializable`.
         >>> WayType('escalator', 'down') is WayType('escalator', 'down')
         True
 
+    You can cast a :py:class:`WayEvent` to string or tuple if needed:
+
+    .. code-block:: python
+
+        >>> str(WayEvent('escalator, 'down'))
+        'escalator.down'
+        >>> tuple(WayEvent('escalator, 'down'))
+        ('escalator', 'down')
+
     .. attention::
         The following attributes are **dynamic** and can not be set.
 
@@ -887,6 +903,3 @@ Submodels of :py:class:`Serializable`.
     .. attribute:: direction
 
         **Not None.** ``up`` or ``down``
-
-    .. note::
-        The serialized representation of this model is a ``(name, direction)`` tuple.

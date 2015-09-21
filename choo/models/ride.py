@@ -37,10 +37,10 @@ class Ride(Collectable):
 
         return super().validate()
 
-    def _serialize_instance(self, **kwargs):
-        data = super()._serialize_instance(**kwargs)
+    def serialize(self, **kwargs):
+        data = super().serialize(**kwargs)
         data['stops'] = [(s.serialize(**kwargs) if s else None) for i, s in self._stops]
-        data['paths'] = {int(i): [p.serialize(**kwargs) for p in path] for i, path in self._paths.items()}
+        data['paths'] = {int(i): [tuple(p) for p in path] for i, path in self._paths.items()}
         return data
 
     @classmethod
@@ -203,8 +203,8 @@ class RideSegment(TripPart):
         assert self._destination is None or isinstance(self._destination, Ride.StopPointer)
         return super().validate()
 
-    def _serialize_instance(self, **kwargs):
-        data = super()._serialize_instance(**kwargs)
+    def serialize(self, **kwargs):
+        data = super().serialize(**kwargs)
         if self._origin is not None:
             data['origin'] = int(self._origin)
 

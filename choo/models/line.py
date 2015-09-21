@@ -4,7 +4,7 @@ from . import fields
 
 
 class Line(Collectable):
-    linetype = fields.Model('LineType')
+    linetype = fields.Model('LineType', string=True, none=False)
     product = fields.Field(str)
     name = fields.Field(str, none=False)
     shortname = fields.Field(str, none=False)
@@ -72,10 +72,14 @@ class LineType(Serializable):
             return self
 
     def serialize(self, **kwargs):
-        return self._value
+        data = super().serialize(**kwargs)
+        data['value'] = self._value
+        return data
 
     @classmethod
     def unserialize(cls, data):
+        if type(data) != str:
+            data = data['value']
         return cls(data)
 
     def __repr__(self):
@@ -91,8 +95,8 @@ class LineType(Serializable):
 
 
 class LineTypes(Serializable):
-    _included = fields.Set(fields.Model(LineType))
-    _excluded = fields.Set(fields.Model(LineType))
+    _included = fields.Set(fields.Model(LineType, string=True))
+    _excluded = fields.Set(fields.Model(LineType, string=True))
 
     def __init__(self, include=('', ), exclude=()):
         super().__init__()

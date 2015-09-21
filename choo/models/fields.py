@@ -96,7 +96,7 @@ class Model(Field):
     _waiting = {}
     _models = {}
 
-    def __init__(self, type_, none=True, default=None):
+    def __init__(self, type_, none=True, default=None, string=False, tuple_=False):
         super().__init__(type_, none=none, default=default)
         if isinstance(type_, str):
             if type_ in Model._models:
@@ -107,6 +107,9 @@ class Model(Field):
                 else:
                     Model._waiting[type_].append(self)
         self.type = type_
+        self.string = string
+        self.tuple = tuple_
+        assert not self.string or not self.tuple
 
     @classmethod
     def add_model(self, model):
@@ -132,7 +135,12 @@ class Model(Field):
     def serialize(self, value, **kwargs):
         if self.none and value is None:
             return None
-        return value.serialize(**kwargs)
+        if self.string:
+            return str(value)
+        elif self.tuple:
+            return tuple(value)
+        else:
+            return value.serialize(**kwargs)
 
     def unserialize(self, value):
         if self.none and value is None:

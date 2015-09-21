@@ -30,9 +30,9 @@ How it works
 .. _`Model Reference`: models.html
 
 .. caution::
-    Some models have a non-dictionary representation or some additional attributes in their dictionary representation. See the `Model Reference`_ for more information.
+    Some models have a additional attributes in their dictionary representation. See the `Model Reference`_ for more information.
 
-All public attributes that are not dynamic and not ``None`` are put into a dictionary. All values are serialized.
+The Type of the Model and all of its public attributes that are not dynamic and not ``None`` are put into a dictionary. All values are serialized.
 
 | **datetime** values are respresented as a string in ``YYYY-MM-DD HH:II:SS`` format.
 | **timedelta** values are respresented as a the total number of seconds as int.
@@ -43,8 +43,9 @@ All public attributes that are not dynamic and not ``None`` are put into a dicti
         "type": "Stop",
         "id": 20009289,
         "source": "vrr",
+        "lat": 51.451137,
+        "lon": 7.012941,
         "country": "de",
         "city": "Essen",
-        "name": "Hauptbahnhof",
-        "coords": [51.451139, 7.012937]
+        "name": "Hauptbahnhof"
     }

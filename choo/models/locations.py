@@ -37,12 +37,15 @@ class Coordinates(GeoLocation):
     def __init__(self, lat=None, lon=None, **kwargs):
         super().__init__(lat=lat, lon=lon, **kwargs)
 
-    def _serialize_instance(self, **kwargs):
-        return [self.lat, self.lon]
+    def __iter__(self):
+        return iter([self.lat, self.lon])
 
     @classmethod
     def unserialize(cls, data):
-        return cls(*data)
+        if isinstance(data, (list, tuple)):
+            return cls(*data)
+        else:
+            return super(GeoLocation, cls).unserialize(data)
 
 
 class Platform(Collectable, GeoLocation):
@@ -125,7 +128,7 @@ class Stop(Location):
     def __init__(self, country=None, city=None, name=None, **kwargs):
         super().__init__(country=country, city=city, name=name, **kwargs)
 
-    def _serialize_instance(self, **kwargs):
+    def serialize(self, **kwargs):
         if 'stops_had_results' not in kwargs:
             kwargs['stops_had_results'] = []
 
@@ -134,7 +137,7 @@ class Stop(Location):
         else:
             kwargs['exclude'] = ['rides', 'lines']
 
-        return super()._serialize_instance(**kwargs)
+        return super().serialize(**kwargs)
 
     def __repr__(self):
         return '<Stop %s>' % repr(self.full_name if self.full_name else (self.city, self.name))

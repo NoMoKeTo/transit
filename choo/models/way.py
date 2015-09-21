@@ -5,13 +5,13 @@ from . import fields
 
 
 class Way(TripPart):
-    waytype = fields.Model('WayType', none=False)
+    waytype = fields.Model('WayType', none=False, string=True)
     origin = fields.Model(GeoLocation, none=True)
     destination = fields.Model(GeoLocation, none=True)
     distance = fields.Field(float)
     duration = fields.Timedelta()
-    events = fields.List(fields.Model('WayEvent', none=False))
-    path = fields.List(fields.Model(Coordinates, none=False))
+    events = fields.List(fields.Model('WayEvent', none=False, string=True))
+    path = fields.List(fields.Model(Coordinates, none=False, tuple_=True))
 
     def __init__(self, waytype=None, origin=None, destination=None, distance=None, **kwargs):
         super().__init__(waytype=(WayType('walk') if waytype is None else waytype),
@@ -61,10 +61,14 @@ class WayType(Serializable):
             return self
 
     def serialize(self, **kwargs):
-        return self._value
+        data = super().serialize(**kwargs)
+        data['value'] = self._value
+        return data
 
     @classmethod
     def unserialize(cls, data):
+        if type(data) != str:
+            data = data['value']
         return cls(data)
 
     def __repr__(self):
@@ -95,10 +99,14 @@ class WayEvent(Serializable):
             return self
 
     def serialize(self, **kwargs):
-        return self._value
+        data = super().serialize(**kwargs)
+        data['name'], data['direction'] = self._value
+        return data
 
     @classmethod
     def unserialize(cls, data):
+        if type(data) == str:
+            data = data.split('.')
         return cls(*data)
 
     def __repr__(self):
@@ -106,6 +114,9 @@ class WayEvent(Serializable):
 
     def __iter__(self):
         return self._value
+
+    def __str__(self):
+        return '%s.%s' % (self.name, self.direction)
 
     def __eq__(self, other):
         return isinstance(other, WayEvent) and self._value == other._value
