@@ -628,11 +628,11 @@ Submodels of :py:class:`TripPart`:
 
     .. attribute:: origin
 
-        The start point :py:class:`Location`.
+        **Not None.** The start point :py:class:`Location`.
 
     .. attribute:: destination
 
-        The end point :py:class:`Location`.
+        **Not None.** The end point :py:class:`Location`.
 
     .. attribute:: distance
 
