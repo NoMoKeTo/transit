@@ -622,6 +622,10 @@ Submodels of :py:class:`TripPart`:
 
     Individual transport (walk, bike, taxi…) with no schedule. Used for example to get from a :py:class:`Address` to a :py:class:`Stop` and for changes but also for trips that are faster by foot.
 
+    .. attribute:: waytype
+
+        **Not None.** The :py:class:`WayType` of this way.
+
     .. attribute:: origin
 
         The start point :py:class:`Location`.
