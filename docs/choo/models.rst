@@ -107,20 +107,17 @@ Submodels of :py:class:`Collectable`.
 
 .. py:class:: Ride(line=None, number=None)
 
-    A ride is implemented as a list of :py:class:`RidePoint` objects.
-
-    Although a :py:class:`Ride` is iterable, most of the time not all stops of the rides are known and the list of known stations can change. This makes the use of integer indices impossible. To avoid this problem, dynamic indices are used for a :py:class:`Ride`.
+    A ride is implemented as a list of :py:class:`RidePoint` objects and suppors nearly all methods of Python's native ``list`` type.
 
     If you iterate over a :py:class:`Ride` each item you get is ``None`` or a :py:class:`RidePoint` object. Each item that is ``None`` stands for n missing stations. It can also mean that the :py:class:`RidePoint` before and after the item are in fact the same. To get rid of all ``None`` items, pass an incomplete ride to a network API.
 
-    You can use integer indices to get, set or delete single :py:class:`RidePoint` objects which is usefull if you want the first (0) or last (-1). But, as explained above, these integer indices may point to another item when the :py:class:`Ride` changes or becomes more complete.
-
-    If you iterate over ``ride.items()`` you get ``(RideStopPointer, RidePoint)`` tuples. When used as an indice, a :py:class:`Ride.StopPointer` used as an indice will always point to the same :py:class:`RidePoint` object.
-
-    You can slice a :py:class:`Ride` (using integer indices or :py:class RideStopPointer`) which will get you a :py:class:`RideSegment` that will always have the correct boundaries. Slicing with no start or no end point is also supported.
+    You can slice a :py:class:`Ride` which will get you a :py:class:`RideSegment` that refers to the original ride but always will have the correct boundaries, even if elements between are removed or inserted between them. Slicing with no start or no end point is also supported.
 
     .. caution::
-        Slicing a :py:class:`Ride` is inclusive! For example, slicing from element 2 to element 5 results in a :py:class:`RideSegment` containing 4 elements in total!
+        Slicing a :py:class:`Ride` is inclusive! For example, slicing from element 2 to element 5 results in a :py:class:`RideSegment` describing the journey between element 2 and element 5, containing 4 elements in total!
+
+    .. attribute:: time
+        The time at which the ride data was retrieved as ``datetime``.
 
     .. attribute:: line
 
@@ -138,39 +135,39 @@ Submodels of :py:class:`Collectable`.
 
         A boolean indicating whether this is a bike-friendly vehicle.
 
-    .. method:: items()
-
-        A ``(RideStopPointer, RidePoint)`` iterator as explained above.
-
     .. method:: append(item)
 
-        Append a :py:class:`RidePoint` object.
+        Append a :py:class:`RidePoint` object (or None).
 
     .. method:: prepend(item)
 
-        Prepend a :py:class:`RidePoint` object.
+        Prepend a :py:class:`RidePoint` object (or None).
 
     .. method:: insert(position, item)
 
-        Insert a :py:class:`RidePoint` as the new position ``position``.
+        Insert a :py:class:`RidePoint` (or None) as the new position ``position``.
 
+    .. method:: remove(item)
+
+        Remove this :py:class:`RidePoint` (not None) from the list.
+
+    .. method:: pop([i])
+
+        Remove the item at the given position (default: last position) from the list.
+
+    .. method:: index([i])
+
+        Remove the item at the given position (default: last position) from the list.
+
+    You can also use ``in`` and ``del``.
 
     .. attention::
         The following attributes are **dynamic** and can not be set.
 
     .. attribute:: path
+        Get the geographic path of the ride as a list of :py:class:`Coordinates`. If you only want to get the path between to stops, just use the :py:class:`RideSegment` property with the same name.
 
-        Get the geographic path of the ride as a list of :py:class:`Coordinates`.
-
-        Falls back to just directly connecting the platform or stop coordinates if no other information is available. If some information is still missing, its value is ``None``.
-
-    .. attribute:: is_complete
-
-        ``True`` if the :py:class:`RidePoint` list is complete and there are no Nones in the list, otherwise ``False``.
-
-    .. py:class:: Ride.StopPointer
-
-        See above. Immutable. Do not use this class directly. You can cast it to int.
+        Falls back to just directly connecting the platform or stop coordinates if no other information is available.
 
     .. note::
         For serialization, pointers are not used. The property ``stops`` is created containing with each item being either a serialized :py:class:`RidePoint` object or ``None``.
@@ -572,36 +569,28 @@ Submodels of :py:class:`TripPart`:
 .. py:class:: RideSegment
     This class created by slicing :py:class:`Ride` objects.
 
-    Integer indices are not too useful in this class, either, although you can for example still use 0 and -1 to get the first or last :py:class:`RideStopPointer` of this segment.
-
     This model is usable in the same way as a :py:class:`Ride`. Slicing it will return another :py:class:`RideSegment` for the same :py:class:`Ride`.
 
     .. caution::
-        Slicing a :py:class:`RideSegment` is inclusive! For example, slicing from element 2 to element 5 results in a :py:class:`RideSegment` containing 4 elements in total!
+        Slicing a :py:class:`Ride` is inclusive! For example, slicing from element 2 to element 5 results in a :py:class:`RideSegment` describing the journey between element 2 and element 5, containing 4 elements in total!
 
     .. attribute:: ride
 
         **Not None.** The :py:class:`Ride` that this object is a segment of.
 
-    .. method:: items()
+    .. method:: index([i])
 
-        A ``(RideStopPointer, RidePoint)`` iterator over this segment.
+        Remove the item at the given position (default: last position) from the list.
 
-    All attributes of the :py:class:`Ride` are also directly accessible through a :py:class:`RideSegment`.
-
+    You can also use ``in``.
 
     .. attention::
         The following attributes are **dynamic** and can not be set.
 
     .. attribute:: path
-
         Get the geographic path of the ride segment as a list of :py:class:`Coordinates`.
 
-        Falls back to just directly connecting the platform or stop coordinates if no other information is available. If some information is still missing, its value is ``None``.
-
-    .. attribute:: is_complete
-
-        ``True`` if the :py:class:`RidePoint` list of this Segment is complete.
+        Falls back to just directly connecting the platform or stop coordinates if no other information is available.
 
     .. attribute:: origin
 
@@ -622,7 +611,7 @@ Submodels of :py:class:`TripPart`:
     .. note::
         For serialization, the boundaries are given as integer indexes as properties ``origin`` and ``destination``. Each one can be missing if the boundary is not set. (e.g. ``ride[5:]``)
 
-        Dont forget that Ride slicing is inclusive (see above)!
+        Don't forget that Ride slicing is inclusive (see above)!
 
 
 .. py:class:: Way(origin: Location, destination: Location, distance: int=None)
