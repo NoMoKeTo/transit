@@ -686,36 +686,41 @@ class EFA(API):
                 points = new_points
                 waypoints = True
 
-            for p in points:
-                if not waypoints and first is None:
+            first = 0
+            last = -1
+            for i, p in enumerate(points):
+                if i > 0 and not waypoints:
                     ride.append(None)
-                pointer = ride.append(p)
-                if first is None:
-                    first = pointer
-            last = pointer
+                ride.append(p)
 
             if origin is not None:
                 if origin != ride[0].stop:
                     ride.prepend(None)
                     ride.prepend(RidePoint(Platform(origin)))
+                    first += 2
             else:
                 ride.prepend(None)
+                first += 1
 
             if destination is not None:
                 if destination != ride[-1].stop:
                     ride.append(None)
                     ride.append(RidePoint(Platform(destination)))
+                    last -= 2
             else:
                 ride.append(None)
+                last -= 1
 
             segment = ride[first:last]
-            if not [1 for p in segment if (p.platform.lat is None or p.platform.lon is None)]:  # todo
-                paths = self._parse_path(path, [p.platform for p in segment])[:-1]
-                for i, point in segment.items():
-                    if not paths:
-                        break
-                    segment.ride._paths[i] = paths.pop(0)
-                return segment
+            if not [1 for p in segment if p is not None and (p.platform.lat is None or p.platform.lon is None)]:
+                # todo
+                pass
+                # paths = self._parse_path(path, [p.platform for p in segment])[:-1]
+                # for i, point in segment.items():
+                #    if not paths:
+                #        break
+                #    segment.ride._paths[i] = paths.pop(0)
+            return segment
 
     def _parse_trip_interchange(self, data):
         """ Parses an optional interchange path of a itdPartialRoute into a Way """
