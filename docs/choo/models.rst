@@ -98,8 +98,8 @@ All choo models are based upon one of the following three base classes that buil
         ID of this object (as ``str``) in the source network.
 
 
-GeoLocation
------------
+Locations
+---------
 
 .. py:class:: GeoLocation
 
@@ -116,9 +116,6 @@ GeoLocation
         longitude as float
 
 
-Coordinates
------------
-
 .. py:class:: Coordinates(lat, lon)
 
     *Submodel of :py:class:`GeoLocation`.*
@@ -132,9 +129,6 @@ Coordinates
         >>> tuple(Coordinates(51.445555, 7.017253))
         (51.445555, 7.017253)
 
-
-Platform
---------
 
 .. py:class:: Platform(stop, name=None, full_name=None)
 
@@ -166,9 +160,6 @@ Platform
 
         Submodel of :py:class:`Searchable.Results`.
 
-
-Location
---------
 
 .. py:class:: Location(country=None, city=None, name=None)
 
@@ -208,8 +199,6 @@ Location
 
         Submodel of :py:class:`Searchable.Results`.
 
-Stop
-----
 
 .. py:class:: Stop(country=None, city=None, name=None)
 
@@ -246,9 +235,6 @@ Stop
         Submodel of :py:class:`Location.Results`.
 
 
-Address
--------
-
 .. py:class:: Address(country=None, city=None, name=None)
 
     *Submodel of :py:class:`Location`.*
@@ -272,9 +258,6 @@ Address
         Submodel of :py:class:`Location.Results`.
 
 
-POI
----
-
 .. py:class:: POI(country=None, city=None, name=None)
 
     *Submodel of :py:class:`Location`.*
@@ -290,8 +273,8 @@ POI
         Submodel of :py:class:`Location.Results`.
 
 
-Ride
-----
+Rides
+-----
 
 .. py:class:: Ride(line=None, number=None)
 
@@ -371,9 +354,6 @@ Ride
         Submodel of :py:class:`Searchable.Results`.
 
 
-RideSegment
------------
-
 .. py:class:: RideSegment
     *Submodel of :py:class:`TripPart`.*
 
@@ -423,9 +403,6 @@ RideSegment
 
         Don't forget that Ride slicing is inclusive (see above)!
 
-
-RidePoint
----------
 
 .. py:class:: RidePoint(platform, arrival=None, departure=None)
 
@@ -483,8 +460,8 @@ LiveTime
         The (expected) actual time as a `datetime.datetime` object if real time data is available, otherwise the originally planned time.
 
 
-Line
-----
+Lines
+-----
 
 .. py:class:: Line(linetype=None)
 
@@ -540,9 +517,6 @@ Line
         For serialization, the string representation is used for ``linetype``.
 
 
-LineType
---------
-
 .. py:class:: LineType(name)
 
     *Submodel of :py:class:`Serializable`.*
@@ -584,9 +558,6 @@ LineType
         >>> str(LineType('train.local'))
         'train.local'
 
-
-LineTypes
----------
 
 .. py:class:: LineTypes(include=('', ), exclude=())
 
@@ -633,8 +604,8 @@ LineTypes
         For serialization, the properties ``included`` and ``excluded`` are created, each one containing a list of string representation of line types.
 
 
-Trip
-----
+Trips
+-----
 
 .. py:class:: Trip
 
@@ -791,8 +762,8 @@ TripPart
     Abstract base Class for Trip parts
 
 
-Way
----
+Ways
+----
 
 .. py:class:: Way(origin: Location, destination: Location, distance: int=None)
 
@@ -834,9 +805,6 @@ Way
         The property ``path`` is a list of tuple representations of :py:class:`Coordinates`.
 
 
-WayType
--------
-
 .. py:class:: WayType(name)
 
     *Submodel of :py:class:`Serializable`.*
@@ -857,9 +825,6 @@ WayType
         >>> str(WayType('walk'))
         'walk'
 
-
-WayEvent
---------
 
 .. py:class:: WayEvent(name, direction)
 
@@ -895,8 +860,8 @@ WayEvent
         **Not None.** ``up`` or ``down``
 
 
-TicketList
-----------
+Tickets
+-------
 
 .. py:class:: TicketList(all_types: bool=True)
 
@@ -924,9 +889,6 @@ TicketList
 
         **Not None.** Other available tickets as a dictionary with the name of the tickets as keys and :py:class:`TicketData` objects as values.
 
-
-TicketData
-----------
 
 Submodels of :py:class:`Serializable`.
 
