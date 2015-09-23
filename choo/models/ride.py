@@ -216,8 +216,7 @@ class Ride(Collectable, RideIterable):
         for point in self:
             if point is None:
                 continue
-            point.validate()
-
+            # todo: point.validate()
         return super().validate()
 
     def serialize(self, **kwargs):
@@ -408,7 +407,7 @@ class Ride(Collectable, RideIterable):
             if self.point is None:
                 return None
             data = super().serialize(**kwargs)
-            data = self.point.serialize()
+            data = self.point.serialize(**kwargs)
             if self.path_to_next:
                 data['path_to_next'] = [tuple(c) for c in self.path_to_next]
             return data
