@@ -222,18 +222,21 @@ class Ride(Collectable, RideIterable):
 
     def serialize(self, **kwargs):
         data = super().serialize(**kwargs)
-        data['stops'] = [e.serialize(**kwargs) for e in self._elems()]
+        data['points'] = [e.serialize(**kwargs) for e in self._elems()]
         return data
 
     @classmethod
     def unserialize(cls, data):
         self = super(Ride, cls).unserialize(data)
 
-        for s in data.get('stops', []):
-            self.append(RidePoint.unserialize(s) if s is not None else None)
-
-        for i, path in data.get('paths', {}).items():
-            self._paths[self.pointer(int(i))] = [Coordinates.unserialize(p) for p in path]
+        for e in data.get('points', []):
+            elem = Ride.Element.unserialize(e)
+            elem.prev = self._last
+            if self._first is None:
+                self._first = elem
+            if self._last is not None:
+                self._last.next = elem
+            self._last = elem
 
         return self
 
@@ -409,6 +412,13 @@ class Ride(Collectable, RideIterable):
             if self.path_to_next:
                 data['path_to_next'] = [tuple(c) for c in self.path_to_next]
             return data
+
+        @classmethod
+        def unserialize(cls, data):
+            self = super(Serializable, cls).unserialize(data)
+            self.point = RidePoint.unserialize(data)
+            self.path_to_next = [Coordinates.unserialize(c) for c in data.get('path_to_next', [])]
+            return self
 
     class Results(Collectable.Results):
         results = fields.List(fields.Tuple(fields.Model('RideSegment'), fields.Field(int)))
