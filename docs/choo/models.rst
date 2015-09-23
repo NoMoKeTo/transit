@@ -170,9 +170,7 @@ Submodels of :py:class:`Collectable`.
         Falls back to just directly connecting the platform or stop coordinates if no other information is available.
 
     .. note::
-        For serialization, pointers are not used. The property ``stops`` is created containing with each item being either a serialized :py:class:`RidePoint` object or ``None``.
-
-        The property ``paths`` is created containing a dictionary containing paths between consecutive ride stops with the index of the origin stop as keys. The paths are arrays of tuple representations of the :py:class:`Coordinates`.
+        For serialization, the property ``stops`` is created containing a list of the serialized elements. Each :py:class:`RidePoint` element can have the additional property ``path_to_next`` containing a list of tupled py:class:`Coordinates`.
 
     .. py:class:: Ride.Request
 
