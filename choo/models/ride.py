@@ -4,6 +4,7 @@ from .locations import Coordinates
 from .ridepoint import RidePoint
 from .line import Line
 from . import fields
+import math
 
 
 class RideIterable(Serializable):
@@ -11,10 +12,6 @@ class RideIterable(Serializable):
         if self.__class__ == RideIterable:
             raise RuntimeError('Only instances of RideIterable subclasses are allowed!')
         super().__init__(**kwargs)
-
-    @property
-    def is_complete(self):
-        return None not in self
 
     def __len__(self):
         i = 0
@@ -47,11 +44,12 @@ class RideIterable(Serializable):
         if isinstance(key, slice):
             if key.step is not None:
                 raise TypeError('%s cannot be sliced with steps', self.__class__.__name__)
-            if not ((key.start is None or isinstance(key.start, int)) and
-                    (key.stop is None or isinstance(key.stop, int))):
+            if not ((key.start is None or isinstance(key.start, (int, Ride.Element))) and
+                    (key.stop is None or isinstance(key.stop, (int, Ride.Element)))):
                 raise TypeError('slice indices must be integers or None')
 
-            return RideSegment(self, self._get_elem(key.start), self._get_elem(key.stop))
+            return RideSegment(self, self._get_elem(key.start) if isinstance(key.start, int) else key.start,
+                               self._get_elem(key.end) if isinstance(key.end, int) else key.end)
 
         return self._get_elem(key).point
 
@@ -77,7 +75,7 @@ class RideIterable(Serializable):
         raise ValueError('%s is not in %s' % (repr(item), self.__class__.__name__))
 
     def _elem_index(self, item):
-        assert isinstance(item, RideIterable.Element)
+        assert isinstance(item, Ride.Element)
 
         for i, elem in enumerate(self._elems()):
             if elem is item:
@@ -91,17 +89,114 @@ class RideIterable(Serializable):
             return False
         return True
 
+    def _distance_in_meters(self, c1, c2):
+        deg2rad = math.pi/180.0
+
+        phi1 = (90.0 - c1.lat)*deg2rad
+        phi2 = (90.0 - c2.lat)*deg2rad
+
+        return math.acos((math.sin(phi1)*math.sin(phi2)*math.cos(c1.lon*deg2rad - c2.lon*deg2rad) +
+                          math.cos(phi1)*math.cos(phi2)))*6378100
+
+    def set_path(self, path):
+        elems = tuple(self._elems())
+        points = [(e.point.platform if e.point is not None else None) for e in elems]
+
+        # Remove leading and trailing unidentified points
+        enum_points = tuple(enumerate(points))
+        for i, point in enum_points:
+            if point is None or point.lat is not None and point.lon is not None:
+                first = i
+                break
+        else:
+            # No positioned points
+            return
+        for i, point in reversed(enum_points):
+            if point is None or point.lat is not None and point.lon is not None:
+                last = i
+                break
+        elems = elems[first:last+1]
+        points = points[first:last+1]
+
+        if None in points:
+            # todo: Has to be uninterrupted point sequence for now
+            return
+
+        # Init
+        indexes = [None] * len(points)
+        distances = [float('Inf')] * len(points)
+
+        # Find Points that are too close to not be right
+        for i, coord in enumerate(path):
+            for j, point in enumerate(points):
+                d = self._distance_in_meters(point, coord)
+                if 15 > d < distances[j]:
+                    indexes[j] = i
+                    distances[j] = d
+
+        # For the rest, find a place between to points
+        lastcoord = None
+        for i, coord in enumerate(path):
+            if not (None is not lastcoord != coord):
+                continue
+
+            for j, point in enumerate(points):
+                if indexes[j] is not None:
+                    continue
+
+                # print([coord.serialize(), point.serialize(), lastcoord.serialize()])
+                if 2.84 < abs(math.atan2(coord.lat - point.lat, coord.lon - point.lon) -
+                              math.atan2(lastcoord.lat - point.lat, lastcoord.lon - point.lon)) < 3.44:
+                    indexes[j] = i
+                    distances[j] = 0
+                    break
+
+        # if still some points are not found on the line, just take the closest
+        for i, coord in enumerate(path):
+            for j, point in enumerate(points):
+                d = self._distance_in_meters(point, coord)
+                if 100 > d < distances[j]:
+                    indexes[j] = i
+                    distances[j] = d
+
+        # No points found
+        if not [i for i in indexes if i is not None]:
+            return
+
+        # Remove leading and trailing unidentified points
+        first = 0
+        last = len(points)-1
+        while first < last and indexes[first] is None:
+            first += 1
+        while first < last and indexes[last] is None:
+            last -= 1
+        elems = elems[first:last]
+        indexes = indexes[first:last+1]
+
+        # We have to have identified each point between the bounds
+        if None in indexes:
+            return
+
+        # If we found the points in the wrong order, we failed
+        if sorted(indexes) != indexes:
+            return
+
+        for i, elem in enumerate(elems):
+            elem.path_to_next = path[indexes[i]:indexes[i+1]]
+
     @property
     def path(self):
-        # todo
-        raise NotImplementedError
-
-    class Element:
-        def __init__(self, point, prev=None, next=None):
-            self.point = point
-            self.prev = prev
-            self.next = next
-            self.path_to_next = None
+        path = []
+        for elem in self._elems():
+            p = elem.point
+            if p is None:
+                continue
+            c = p.to_coordinates()
+            if c is not None:
+                path.append(c)
+            if elem != self._last:
+                path.extend(elem.path_to_next)
+        return path
 
 
 class Ride(Collectable, RideIterable):
@@ -127,9 +222,7 @@ class Ride(Collectable, RideIterable):
 
     def serialize(self, **kwargs):
         data = super().serialize(**kwargs)
-        data['stops'] = [(p.serialize(**kwargs) if p is not None else None) for p in self]
-        # todo
-        # data['paths'] = {int(i): [tuple(p) for p in path] for i, path in self._paths.items()}
+        data['stops'] = [e.serialize(**kwargs) for e in self._elems()]
         return data
 
     @classmethod
@@ -172,7 +265,7 @@ class Ride(Collectable, RideIterable):
         if item is not None and not isinstance(item, RidePoint):
             raise TypeError('Ride elements must be RidePoints or None, not %s' % type(item).__name__)
 
-        elem = RideIterable.Element(item, prev=self._last)
+        elem = Ride.Element(item, prev=self._last)
 
         if self._first is None:
             self._first = self._last = elem
@@ -188,7 +281,7 @@ class Ride(Collectable, RideIterable):
         if item is not None and not isinstance(item, RidePoint):
             raise TypeError('Ride elements must be RidePoints or None, not %s' % type(item).__name__)
 
-        elem = RideIterable.Element(item, next=self._first)
+        elem = Ride.Element(item, next_=self._first)
 
         if self._first is None:
             self._first = self._last = elem
@@ -217,9 +310,14 @@ class Ride(Collectable, RideIterable):
         if elem == self._first:
             return self.prepend(item)
 
-        newelem = RideIterable.Element(item, prev=elem.prev, next=elem)
+        # Insert element and reevaluate path
+        segment = self[elem.prev:elem.next]
+        path = segment.path
+        newelem = Ride.Element(item, prev=elem.prev, next_=elem)
+        elem.prev.path_to_next = []
         elem.prev.next = newelem
         elem.prev = newelem
+        segment.set_path(path)
 
     def _remove_elem(self, elem):
         if elem != self._first:
@@ -230,6 +328,10 @@ class Ride(Collectable, RideIterable):
             elem.next.prev = elem.prev
         else:
             self._last = elem.prev
+
+        # this usually means that the ride has been reroutet, so delete path
+        if elem != self._first:
+            elem.prev.path_to_next = []
 
         if elem.prev is not None and elem.next is not None and elem.prev.pointer is elem.next.pointer is None:
             self._remove_elem(elem.next)
@@ -292,6 +394,22 @@ class Ride(Collectable, RideIterable):
     def __repr__(self):
         return '<Ride %s %s>' % (self.number, repr(self.line))
 
+    class Element(Serializable):
+        def __init__(self, point, prev=None, next_=None):
+            self.point = point
+            self.prev = prev
+            self.next = next_
+            self.path_to_next = []
+
+        def serialize(self, **kwargs):
+            if self.point is None:
+                return None
+            data = super().serialize(**kwargs)
+            data = self.point.serialize()
+            if self.path_to_next:
+                data['path_to_next'] = [tuple(c) for c in self.path_to_next]
+            return data
+
     class Results(Collectable.Results):
         results = fields.List(fields.Tuple(fields.Model('RideSegment'), fields.Field(int)))
 
@@ -305,10 +423,17 @@ class RideSegment(TripPart, RideIterable):
 
     def __init__(self, ride=None, origin=None, destination=None, **kwargs):
         super().__init__(**kwargs)
-        print(origin, destination)
+
         self.ride = ride
         self._origin = origin
         self._destination = destination
+        elem = self._first
+        while True:
+            if elem == self._last:
+                break
+            elem = elem.next
+        else:
+            raise ValueError('Impossible RideSegment')
 
     @property
     def _first(self):
@@ -319,8 +444,8 @@ class RideSegment(TripPart, RideIterable):
         return self.ride._last if self._destination is None else self._destination
 
     def validate(self):
-        assert self._origin is None or isinstance(self._origin, RideIterable.Element)
-        assert self._destination is None or isinstance(self._destination, RideIterable.Element)
+        assert self._origin is None or isinstance(self._origin, Ride.Element)
+        assert self._destination is None or isinstance(self._destination, Ride.Element)
         return super().validate()
 
     def serialize(self, **kwargs):

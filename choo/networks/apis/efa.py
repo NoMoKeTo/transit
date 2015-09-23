@@ -9,7 +9,6 @@ import xml.etree.ElementTree as ET
 from .base import API
 import requests
 import re
-import math
 
 
 class EFA(API):
@@ -712,14 +711,7 @@ class EFA(API):
                 last -= 1
 
             segment = ride[first:last]
-            if not [1 for p in segment if p is not None and (p.platform.lat is None or p.platform.lon is None)]:
-                # todo
-                pass
-                # paths = self._parse_path(path, [p.platform for p in segment])[:-1]
-                # for i, point in segment.items():
-                #    if not paths:
-                #        break
-                #    segment.ride._paths[i] = paths.pop(0)
+            segment.set_path(path)
             return segment
 
     def _parse_trip_interchange(self, data):
@@ -748,58 +740,6 @@ class EFA(API):
         way.events = events
 
         return way
-
-    def _parse_path(self, totalpath, points):
-        pointi = [None for point in enumerate(points)]
-
-        # Find Points that are too close to not be right
-        for i, coord in enumerate(totalpath):
-            for j, point in enumerate(points):
-                d = (abs(point.lat - coord.lat) ** 2 + abs(point.lon - coord.lon) ** 2) ** 0.5
-                if d < 0.0002 and (pointi[j] is None or pointi[j][2] > d):
-                    pointi[j] = (i, 0, d)
-
-        # For the rest, find a place between to points
-        lastcoord = None
-        for i, coord in enumerate(totalpath):
-            if lastcoord is None or lastcoord == coord:
-                continue
-
-            for j, point in enumerate(points):
-                if pointi[j] is not None:
-                    continue
-
-                # print([coord.serialize(), point.serialize(), lastcoord.serialize()])
-                if 2.84 < abs(math.atan2(coord.lat - point.lat, coord.lon - point.lon) -
-                              math.atan2(lastcoord.lat - point.lat, lastcoord.lon - point.lon)) < 3.44:
-                    pointi[j] = (i, 1)
-                    break
-
-        # And if still some points are not found on the line, just take the closest
-        for i, coord in enumerate(totalpath):
-            for j, point in enumerate(points):
-                d = (abs(point.lat - coord.lat) ** 2 + abs(point.lon - coord.lon) ** 2) ** 0.5
-                if pointi[j] is None or (pointi[j][1] == 2 and pointi[j][2] > d):
-                    pointi[j] = (i, 2, d)
-
-        if None in pointi:
-            return []
-
-        pointitest = [p[0] for p in pointi]
-        if sorted(pointitest) != pointitest:
-            # We found the points in the wrong order – so this is bullshit, return nothing
-            return []
-
-        paths = []
-        for i, data in reversed(list(enumerate(pointi))):
-            if data[1] == 1:
-                paths.insert(0, totalpath[data[0]:])
-                totalpath = totalpath[:data[0]]
-            else:
-                paths.insert(0, totalpath[data[0]:])
-                totalpath = totalpath[:data[0] + 1]
-
-        return paths
 
     def _parse_datetime(self, data):
         """ Create a datetime from itdDate and itdTime """

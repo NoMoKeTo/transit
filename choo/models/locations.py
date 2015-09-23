@@ -12,6 +12,11 @@ class GeoLocation(Serializable):
             raise RuntimeError('Only instances of GeoLocation subclasses are allowed!')
         super().__init__(**kwargs)
 
+    def to_coordinates(self, **kwargs):
+        if self.lat is None or self.lon is None:
+            return None
+        return Coordinates(self.lat, self.lon)
+
     def __eq__(self, other):
         return (isinstance(other, GeoLocation) and
                 self.lat is not None and other.lat == self.lat and
@@ -35,6 +40,8 @@ class GeoLocation(Serializable):
 
 class Coordinates(GeoLocation):
     def __init__(self, lat=None, lon=None, **kwargs):
+        if lat is None or lon is None:
+            raise ValueError('latitude and longitude has to be not None')
         super().__init__(lat=lat, lon=lon, **kwargs)
 
     def __iter__(self):
