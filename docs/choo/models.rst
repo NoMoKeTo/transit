@@ -4,11 +4,10 @@ Model Reference
 .. note::
     Every attribute can be None when no data is available, unless noted otherwise.
 
-Base Classes
-------------
+Base Models
+-----------
 
 All choo models are based upon one of the following three base classes that build on top of each other.
-
 
 .. py:class:: Serializable
 
@@ -99,13 +98,204 @@ All choo models are based upon one of the following three base classes that buil
         ID of this object (as ``str``) in the source network.
 
 
-
-Main Models
+GeoLocation
 -----------
 
-Submodels of :py:class:`Collectable`.
+.. py:class:: GeoLocation
+
+    *Submodel of :py:class:`Serializable`.*
+
+    Abstract base class for everything that has a fixed position.
+
+    .. attribute:: lat
+
+        latitude as float
+
+    .. attribute:: lon
+
+        longitude as float
+
+
+Coordinates
+-----------
+
+.. py:class:: Coordinates(lat, lon)
+
+    *Submodel of :py:class:`GeoLocation`.*
+
+    A Model just geographic coordinate.
+
+    You can cast :py:class:`Coordinates` to tuple if needed:
+
+    .. code-block:: python
+
+        >>> tuple(Coordinates(51.445555, 7.017253))
+        (51.445555, 7.017253)
+
+
+Platform
+--------
+
+.. py:class:: Platform(stop, name=None, full_name=None)
+
+    *Submodel of :py:class:`Collectable` and :py:class:`GeoLocation`.*
+
+    An place where rides stop (e.g. Gleis 7). It belongs to one :py:class:`Stop`.
+
+    .. attribute:: ifopt
+
+        The globally unique ID of this Platform according to *Identification of Fixed Objects in Public Transport* supported by some APIs.
+
+    .. attribute:: stop
+
+        **Not None.** The :py:class:`Stop` this platform belongs to.
+
+    .. attribute:: name
+
+        The name of this Platform (e.g. 7 or 2b).
+
+    .. attribute:: full_name
+
+        The full name of this Platform (e.g. Bussteig 7 or Gleis 2b)
+
+    .. py:class:: Platform.Request
+
+        Submodel of :py:class:`Searchable.Request`.
+
+    .. py:class:: Platform.Results
+
+        Submodel of :py:class:`Searchable.Results`.
+
+
+Location
+--------
+
+.. py:class:: Location(country=None, city=None, name=None)
+
+    *Submodel of :py:class:`Collectable` and :py:class:`GeoLocation`.*
+
+    Abstract base class place that is named and not a sublocation like a :py:class:`Platform`.
+
+    .. attribute:: country
+
+        The country of this location as a two-letter country code.
+
+    .. attribute:: city
+
+        The name of the city this location is located in.
+
+    .. attribute:: name
+
+        The name of this location. If the ``city`` attribute is ``None`` this it may also included in the name.
+
+    .. attribute:: near_stops
+
+        Other stops near this one as a ``Stop.Results``, if available. You can always search for Stops near a :py:class:`GeoLocation` directly using ``Stop.Request``.
+
+    .. py:class:: Location.Request
+
+        Submodel of :py:class:`Searchable.Request`.
+
+        .. attribute:: name
+
+            A search string for the name of the Location.
+
+        .. attribute:: city
+
+            City of the Location.
+
+    .. py:class:: Location.Results
+
+        Submodel of :py:class:`Searchable.Results`.
+
+Stop
+----
+
+.. py:class:: Stop(country=None, city=None, name=None)
+
+    *Submodel of :py:class:`Location`.*
+
+    A train station, bus stop, etc. For example: Düsseldorf Hbf.
+
+    .. attribute:: ifopt
+
+        The globally unique ID of this Stop according to *Identification of Fixed Objects in Public Transport* supported by some APIs.
+
+    .. attribute:: uic
+
+        The is the international train station id by the *International Union of Railways*.
+
+    .. attribute:: full_name
+
+        The full name of this Stop. Can be just the city and the name, but does'nt have to.
+
+    .. attribute:: lines
+
+         The Lines that are available at this stop as a ``Line.Results`` object, if available. You can always search for Lines at a :py:class:`Stop` using :py:class:`Line.Request`.
+
+    .. attribute:: rides
+
+        The next rides at this stop as a ``Ride.Results`` object, if available. You can always search for Rides at a :py:class:`Stop` using :py:class:`Ride.Request`.
+
+    .. py:class:: Stop.Request
+
+        Submodel of :py:class:`Location.Request`.
+
+    .. py:class:: Stop.Results
+
+        Submodel of :py:class:`Location.Results`.
+
+
+Address
+-------
+
+.. py:class:: Address(country=None, city=None, name=None)
+
+    *Submodel of :py:class:`Location`.*
+
+    An address. The ``name`` attribute contains the address in one string, but more detailed attributes may be available:
+
+    .. attribute:: street
+
+        The name of the street.
+
+    .. attribute:: number
+
+        The house number as a string.
+
+    .. py:class:: Address.Request
+
+        Submodel of :py:class:`Location.Request`.
+
+    .. py:class:: Address.Results
+
+        Submodel of :py:class:`Location.Results`.
+
+
+POI
+---
+
+.. py:class:: POI(country=None, city=None, name=None)
+
+    *Submodel of :py:class:`Location`.*
+
+    A Point of Interest.
+
+    .. py:class:: POI.Request
+
+        Submodel of :py:class:`Location.Request`.
+
+    .. py:class:: POI.Results
+
+        Submodel of :py:class:`Location.Results`.
+
+
+Ride
+----
 
 .. py:class:: Ride(line=None, number=None)
+
+    *Submodel of :py:class:`Collectable`.*
 
     A ride is implemented as a list of :py:class:`RidePoint` objects and suppors nearly all methods of Python's native ``list`` type.
 
@@ -181,7 +371,124 @@ Submodels of :py:class:`Collectable`.
         Submodel of :py:class:`Searchable.Results`.
 
 
+RideSegment
+-----------
+
+.. py:class:: RideSegment
+    *Submodel of :py:class:`TripPart`.*
+
+    This class created by slicing :py:class:`Ride` objects.
+
+    This model is usable in the same way as a :py:class:`Ride`. Slicing it will return another :py:class:`RideSegment` for the same :py:class:`Ride`.
+
+    .. caution::
+        Slicing a :py:class:`Ride` is inclusive! For example, slicing from element 2 to element 5 results in a :py:class:`RideSegment` describing the journey between element 2 and element 5, containing 4 elements in total!
+
+    .. attribute:: ride
+
+        **Not None.** The :py:class:`Ride` that this object is a segment of.
+
+    .. method:: index([i])
+
+        Remove the item at the given position (default: last position) from the list.
+
+    You can also use ``in``.
+
+    .. attention::
+        The following attributes are **dynamic** and can not be set.
+
+    .. attribute:: path
+        Get the geographic path of the ride segment as a list of :py:class:`Coordinates`.
+
+        Falls back to just directly connecting the platform or stop coordinates if no other information is available.
+
+    .. attribute:: origin
+
+        The first :py:class:`Stop` of this segment. Shortcut for ``segment[0].stop``.
+
+    .. attribute:: destination
+
+        The last :py:class:`Stop` of this segment. Shortcut for ``segment[-1].stop``.
+
+    .. attribute:: departure
+
+        The departure at the first :py:class:`Stop` of this segment as :py:class:`LiveTime`. Shortcut for ``segment[0].departure``.
+
+    .. attribute:: arrival
+
+        The arrival at the last :py:class:`Stop` of this segment as :py:class:`LiveTime`. Shortcut for ``segment[-1].arrival``.
+
+    .. note::
+        For serialization, the boundaries are given as integer indexes as properties ``origin`` and ``destination``. Each one can be missing if the boundary is not set. (e.g. ``ride[5:]``)
+
+        Don't forget that Ride slicing is inclusive (see above)!
+
+
+RidePoint
+---------
+
+.. py:class:: RidePoint(platform, arrival=None, departure=None)
+
+    *Submodel of :py:class:`Serializable`.*
+
+    Time and place of a :py:class:`Ride` stopping at a :py:class:`Platform`.
+
+    .. attribute:: platform
+
+        **Not None.** The :py:class:`Platform`.
+
+    .. attribute:: arrival
+
+        The arrival time of the :py:class:`Ride` as :py:class:`LiveTime`.
+
+    .. attribute:: departure
+
+        The departure time of the :py:class:`Ride` as :py:class:`LiveTime`.
+
+    .. attribute:: passthrough
+
+        A boolean indicating whether the ride does not actually stop at this :py:class:`Stop` but pass through it.
+
+
+LiveTime
+--------
+
+.. py:class:: LiveTime(time, delay=None)
+
+    *Submodel of :py:class:`Serializable`.*
+
+    A point in time with optional real time data.
+
+    :param time: The originally planned time as a `datetime.datetime` object.
+    :param delay: The (expected) delay as a `datetime.timedelta` object if known.
+
+    .. attribute:: time
+
+        **Not None.** The originally planned time as a `datetime.datetime` object.
+
+    .. attribute:: delay
+
+        The (expected) delay as a `datetime.timedelta` object or None.
+        Please note that a zero delay is not the same as None. None stands for absence of real time information.
+
+    .. attention::
+        The following attributes are **dynamic** and can not be set.
+
+    .. attribute:: is_live
+
+        True if there is real time data available. Shortcut for ``delay is not None``
+
+    .. attribute:: expected_time
+
+        The (expected) actual time as a `datetime.datetime` object if real time data is available, otherwise the originally planned time.
+
+
+Line
+----
+
 .. py:class:: Line(linetype=None)
+
+    *Submodel of :py:class:`Collectable`.*
 
     A group of Rides (e.g. Bus Line 495). Every :py:class:`Ride` belongs to one Line.
 
@@ -233,183 +540,105 @@ Submodels of :py:class:`Collectable`.
         For serialization, the string representation is used for ``linetype``.
 
 
+LineType
+--------
 
-Locations
----------
+.. py:class:: LineType(name)
 
-Submodel of Serializable
+    *Submodel of :py:class:`Serializable`.*
 
-.. py:class:: GeoLocation
+    Each :py:class:`Line` has a line type. A line type has one of the values ``(empty string)``, ``train``, ``train.local``, ``train.longdistance``, ``train.longdistance.highspeed``,
+    ``urban``, ``metro``, ``tram``, ``bus``, ``bus.regional``, ``bus.city``, ``bus.express``, ``bus.longdistance``, ``suspended``, ``ship``, ``dialable``, or ``other``.
 
-    Base class for everything that has a fixed position.
+    An empty string means that it can be anyone of the other linetypes, The linetype ``bus`` means that it could be any of the bus-subtypes. The reason for this is that
+    not all networks differentiate between some subtyes (e.g. bus types). See the network reference for which linetypes it may output.
 
-    .. note::
-        You can not create instances of this class, only of its subclasses!
-
-    .. attribute:: lat
-
-        latitude as float
-
-    .. attribute:: lon
-
-        longitude as float
-
-
-.. py:class:: Coordinates(lat, lon)
-
-    A :py:class:`GeoLocation` describing just geographic coordinate.
-
-    You can cast :py:class:`Coordinates` to tuple if needed:
+    All identical linetypes are the same instance:
 
     .. code-block:: python
 
-        >>> tuple(Coordinates(51.445555, 7.017253))
-        (51.445555, 7.017253)
+        >>> LineType('bus') is LineType('bus')
+        True
+
+    To compare against a linetype, use the ``in`` operator. Be aware that this operator is not transitive!
+
+    .. code-block:: python
+
+        >>> linetype = LineType('bus.express')
+        >>> linetype in LineType('bus')
+        True
+        >>> LineType('bus') in linetype
+        False
+
+        >>> LineType('bus') in LineType('')
+        True
+        >>> LineType('') in LineType('bus')
+        False
+        >>> LineType('bus') in LineType('bus')
+        True
+
+    You can cast a :py:class:`LineType` to string if needed:
+
+    .. code-block:: python
+
+        >>> str(LineType('train.local'))
+        'train.local'
 
 
-.. py:class:: Platform(stop, name=None, full_name=None)
+LineTypes
+---------
 
-    An :py:class:`Collectable` :py:class:`GeoLocation` where rides stop (e.g. Gleis 7). It belongs to one :py:class:`Stop`.
+.. py:class:: LineTypes(include=('', ), exclude=())
 
-    .. attribute:: ifopt
+    *Submodel of :py:class:`Serializable`.*
 
-        The globally unique ID of this Platform according to *Identification of Fixed Objects in Public Transport* supported by some APIs.
+    A selector for :py:class:`LineType` object. It is defined as a list of included line types and a list of excluded linetypes. By default, all line types are included.
 
-    .. attribute:: stop
+    .. code-block:: python
 
-        **Not None.** The :py:class:`Stop` this platform belongs to.
+        >>> LineType('bus') in LineTypes()
+        True
 
-    .. attribute:: name
+        >>> LineType('bus') in LineTypes(exclude=('bus', ))
+        False
+        >>> LineType('bus.express') in LineTypes(exclude=('bus', ))
+        False
+        >>> LineType('bus') in LineTypes(exclude=('bus.express', ))
+        True
+        >>> LineType('bus.express') in LineTypes(exclude=('bus.express', ))
+        False
 
-        The name of this Platform (e.g. 7 or 2b).
+        >>> LineType('train') in LineTypes(include=('bus', ), exclude=('bus.express', ))
+        False
+        >>> LineType('bus') in LineTypes(include=('bus', ), exclude=('bus.express', ))
+        True
+        >>> LineType('bus.express') in LineTypes(include=('bus', ), exclude=('bus.express', ))
+        False
 
-    .. attribute:: full_name
+    You can modify the selector using the following methods:
 
-        The full name of this Platform (e.g. Bussteig 7 or Gleis 2b)
+    .. method:: include(*linetypes)
 
-    .. py:class:: Platform.Request
+        :param linetypes: one or more line types as string or :py:class:`LineType`
 
-        Submodel of :py:class:`Searchable.Request`.
+        Make sure that the given line types and all of their subtypes are matched by the selector.
 
-    .. py:class:: Platform.Results
+    .. method:: exclude(*linetypes)
 
-        Submodel of :py:class:`Searchable.Results`.
+        :param linetypes: one or more line types as string or :py:class:`LineType`
 
-
-.. py:class:: Location(country=None, city=None, name=None)
-
-    Base class for a :py:class:`Collectable` :py:class:`GeoLocation` that is named and not a sublocation like a :py:class:`Platform`.
+        Make sure that the given line types and all of their subtypes are not matched by the selector.
 
     .. note::
-        You can not create instances of this class, only of its subclasses!
-
-    .. attribute:: country
-
-        The country of this location as a two-letter country code.
-
-    .. attribute:: city
-
-        The name of the city this location is located in.
-
-    .. attribute:: name
-
-        The name of this location. If the ``city`` attribute is ``None`` this it may also included in the name.
-
-    .. attribute:: near_stops
-
-        Other stops near this one as a ``Stop.Results``, if available. You can always search for Stops near a :py:class:`GeoLocation` directly using ``Stop.Request``.
-
-    .. py:class:: Location.Request
-
-        Submodel of :py:class:`Searchable.Request`.
-
-        .. attribute:: name
-
-            A search string for the name of the Location.
-
-        .. attribute:: city
-
-            City of the Location.
-
-    .. py:class:: Location.Results
-
-        Submodel of :py:class:`Searchable.Results`.
+        For serialization, the properties ``included`` and ``excluded`` are created, each one containing a list of string representation of line types.
 
 
-.. py:class:: Stop(country=None, city=None, name=None)
-
-    A :py:class:`Location` describing a stop, for example: Düsseldorf Hbf.
-
-    .. attribute:: ifopt
-
-        The globally unique ID of this Stop according to *Identification of Fixed Objects in Public Transport* supported by some APIs.
-
-    .. attribute:: uic
-
-        The is the international train station id by the *International Union of Railways*.
-
-    .. attribute:: full_name
-
-        The full name of this Stop. Can be just the city and the name, but does'nt have to.
-
-    .. attribute:: lines
-
-         The Lines that are available at this stop as a ``Line.Results`` object, if available. You can always search for Lines at a :py:class:`Stop` using :py:class:`Line.Request`.
-
-    .. attribute:: rides
-
-        The next rides at this stop as a ``Ride.Results`` object, if available. You can always search for Rides at a :py:class:`Stop` using :py:class:`Ride.Request`.
-
-    .. py:class:: Stop.Request
-
-        Submodel of :py:class:`Location.Request`.
-
-    .. py:class:: Stop.Results
-
-        Submodel of :py:class:`Location.Results`.
-
-
-.. py:class:: Address(country=None, city=None, name=None)
-
-    A :py:class:`Location` describing an address. The ``name`` attribute contains the address in one string, but more detailed attributes may be available:
-
-    .. attribute:: street
-
-        The name of the street.
-
-    .. attribute:: number
-
-        The house number as a string.
-
-    .. py:class:: Address.Request
-
-        Submodel of :py:class:`Location.Request`.
-
-    .. py:class:: Address.Results
-
-        Submodel of :py:class:`Location.Results`.
-
-
-.. py:class:: POI(country=None, city=None, name=None)
-
-    A :py:class:`Location` describing a Point of Interest.
-
-    .. py:class:: POI.Request
-
-        Submodel of :py:class:`Location.Request`.
-
-    .. py:class:: POI.Results
-
-        Submodel of :py:class:`Location.Results`.
-
-
-
-Trips
------
-
-Submodel of :py:class:`Searchable`.
+Trip
+----
 
 .. py:class:: Trip
+
+    *Submodel of :py:class:`Searchable`.*
 
     A connection from a :py:class:`GeoLocation` to another :py:class:`GeoLocation`.
 
@@ -552,67 +781,22 @@ Submodel of :py:class:`Searchable`.
             **Not None.** The end :py:class:`GeoLocation` of the trip.
 
 
-
-Trip parts
-----------
+TripPart
+--------
 
 .. py:class:: TripPart
-    Base Class for Trip parts
 
-    .. note::
-        You can not create instances of this class, only of its subclasses!
+    *Submodel of :py:class:`Serializable`.*
 
-Submodels of :py:class:`TripPart`:
+    Abstract base Class for Trip parts
 
-.. py:class:: RideSegment
-    This class created by slicing :py:class:`Ride` objects.
 
-    This model is usable in the same way as a :py:class:`Ride`. Slicing it will return another :py:class:`RideSegment` for the same :py:class:`Ride`.
-
-    .. caution::
-        Slicing a :py:class:`Ride` is inclusive! For example, slicing from element 2 to element 5 results in a :py:class:`RideSegment` describing the journey between element 2 and element 5, containing 4 elements in total!
-
-    .. attribute:: ride
-
-        **Not None.** The :py:class:`Ride` that this object is a segment of.
-
-    .. method:: index([i])
-
-        Remove the item at the given position (default: last position) from the list.
-
-    You can also use ``in``.
-
-    .. attention::
-        The following attributes are **dynamic** and can not be set.
-
-    .. attribute:: path
-        Get the geographic path of the ride segment as a list of :py:class:`Coordinates`.
-
-        Falls back to just directly connecting the platform or stop coordinates if no other information is available.
-
-    .. attribute:: origin
-
-        The first :py:class:`Stop` of this segment. Shortcut for ``segment[0].stop``.
-
-    .. attribute:: destination
-
-        The last :py:class:`Stop` of this segment. Shortcut for ``segment[-1].stop``.
-
-    .. attribute:: departure
-
-        The departure at the first :py:class:`Stop` of this segment as :py:class:`LiveTime`. Shortcut for ``segment[0].departure``.
-
-    .. attribute:: arrival
-
-        The arrival at the last :py:class:`Stop` of this segment as :py:class:`LiveTime`. Shortcut for ``segment[-1].arrival``.
-
-    .. note::
-        For serialization, the boundaries are given as integer indexes as properties ``origin`` and ``destination``. Each one can be missing if the boundary is not set. (e.g. ``ride[5:]``)
-
-        Don't forget that Ride slicing is inclusive (see above)!
-
+Way
+---
 
 .. py:class:: Way(origin: Location, destination: Location, distance: int=None)
+
+    *Submodel of :py:class:`TripPart`.*
 
     Individual transport (walk, bike, taxi…) with no schedule. Used for example to get from a :py:class:`Address` to a :py:class:`Stop` and for changes but also for trips that are faster by foot.
 
@@ -650,198 +834,12 @@ Submodels of :py:class:`TripPart`:
         The property ``path`` is a list of tuple representations of :py:class:`Coordinates`.
 
 
-
-
-Other Models
-------------
-
-Submodels of :py:class:`Serializable`.
-
-.. py:class:: RidePoint(platform, arrival=None, departure=None)
-
-    Time and place of a :py:class:`Ride` stopping at a :py:class:`Platform`.
-
-    .. attribute:: platform
-
-        **Not None.** The :py:class:`Platform`.
-
-    .. attribute:: arrival
-
-        The arrival time of the :py:class:`Ride` as :py:class:`LiveTime`.
-
-    .. attribute:: departure
-
-        The departure time of the :py:class:`Ride` as :py:class:`LiveTime`.
-
-    .. attribute:: passthrough
-
-        A boolean indicating whether the ride does not actually stop at this :py:class:`Stop` but pass through it.
-
-
-.. py:class:: LiveTime(time, delay=None)
-
-    A point in time with optional real time data.
-
-    :param time: The originally planned time as a `datetime.datetime` object.
-    :param delay: The (expected) delay as a `datetime.timedelta` object if known.
-
-    .. attribute:: time
-
-        **Not None.** The originally planned time as a `datetime.datetime` object.
-
-    .. attribute:: delay
-
-        The (expected) delay as a `datetime.timedelta` object or None.
-        Please note that a zero delay is not the same as None. None stands for absence of real time information.
-
-    .. attention::
-        The following attributes are **dynamic** and can not be set.
-
-    .. attribute:: is_live
-
-        True if there is real time data available. Shortcut for ``delay is not None``
-
-    .. attribute:: expected_time
-
-        The (expected) actual time as a `datetime.datetime` object if real time data is available, otherwise the originally planned time.
-
-
-.. py:class:: TicketList(all_types: bool=True)
-
-    A list of tickets.
-
-    .. attribute:: currency
-
-        **Not None.** The name or abbreviation of the currency.
-
-    .. attribute:: level_name
-
-        How a level is named at this network.
-
-    .. attribute:: single
-
-        **Not None.** The single ticket as :py:class:`TicketData`.
-
-    .. attribute:: bike
-
-        The single ticket as :py:class:`TicketData`.
-
-    .. attribute:: other
-
-        **Not None.** Other available tickets as a dictionary with the name of the tickets as keys and :py:class:`TicketData` objects as values.
-
-
-
-Data types
--------------------------
-
-Submodels of :py:class:`Serializable`.
-
-.. py:class:: TicketData(authority=None, level=None, price=None, price_child=None)
-
-    Information about a ticket.
-
-    .. attribute:: authority
-
-        The name of the authority selling this ticket.
-
-    .. attribute:: level
-
-        The level of this ticket, e.g. A or something similar, depending on the network
-
-    .. attribute:: price
-
-        **Not None.** The price of this ticket as float.
-
-    .. attribute:: price_child
-
-        The children’s price for this ticket if this ticket is not a ticket for children only but has a different price for children.
-
-
-.. py:class:: LineType(name)
-
-    Each :py:class:`Line` has a line type. A line type has one of the values ``(empty string)``, ``train``, ``train.local``, ``train.longdistance``, ``train.longdistance.highspeed``,
-    ``urban``, ``metro``, ``tram``, ``bus``, ``bus.regional``, ``bus.city``, ``bus.express``, ``bus.longdistance``, ``suspended``, ``ship``, ``dialable``, or ``other``.
-
-    An empty string means that it can be anyone of the other linetypes, The linetype ``bus`` means that it could be any of the bus-subtypes. The reason for this is that
-    not all networks differentiate between some subtyes (e.g. bus types). See the network reference for which linetypes it may output.
-
-    All identical linetypes are the same instance:
-
-    .. code-block:: python
-
-        >>> LineType('bus') is LineType('bus')
-        True
-
-    To compare against a linetype, use the ``in`` operator. Be aware that this operator is not transitive!
-
-    .. code-block:: python
-
-        >>> linetype = LineType('bus.express')
-        >>> linetype in LineType('bus')
-        True
-        >>> LineType('bus') in linetype
-        False
-
-        >>> LineType('bus') in LineType('')
-        True
-        >>> LineType('') in LineType('bus')
-        False
-        >>> LineType('bus') in LineType('bus')
-        True
-
-    You can cast a :py:class:`LineType` to string if needed:
-
-    .. code-block:: python
-
-        >>> str(LineType('train.local'))
-        'train.local'
-
-
-.. py:class:: LineTypes(include=('', ), exclude=())
-
-    A selector for :py:class:`LineType` object. It is defined as a list of included line types and a list of excluded linetypes. By default, all line types are included.
-
-    .. code-block:: python
-
-        >>> LineType('bus') in LineTypes()
-        True
-
-        >>> LineType('bus') in LineTypes(exclude=('bus', ))
-        False
-        >>> LineType('bus.express') in LineTypes(exclude=('bus', ))
-        False
-        >>> LineType('bus') in LineTypes(exclude=('bus.express', ))
-        True
-        >>> LineType('bus.express') in LineTypes(exclude=('bus.express', ))
-        False
-
-        >>> LineType('train') in LineTypes(include=('bus', ), exclude=('bus.express', ))
-        False
-        >>> LineType('bus') in LineTypes(include=('bus', ), exclude=('bus.express', ))
-        True
-        >>> LineType('bus.express') in LineTypes(include=('bus', ), exclude=('bus.express', ))
-        False
-
-    You can modify the selector using the following methods:
-
-    .. method:: include(*linetypes)
-
-        :param linetypes: one or more line types as string or :py:class:`LineType`
-
-        Make sure that the given line types and all of their subtypes are matched by the selector.
-
-    .. method:: exclude(*linetypes)
-
-        :param linetypes: one or more line types as string or :py:class:`LineType`
-
-        Make sure that the given line types and all of their subtypes are not matched by the selector.
-
-    .. note::
-        For serialization, the properties ``included`` and ``excluded`` are created, each one containing a list of string representation of line types.
-
+WayType
+-------
 
 .. py:class:: WayType(name)
+
+    *Submodel of :py:class:`Serializable`.*
 
     Each :py:class:`Way` has a line type. A Linetype has one of the values ``walk``, ``bike``, ``car``, ``taxi``.
 
@@ -860,7 +858,12 @@ Submodels of :py:class:`Serializable`.
         'walk'
 
 
+WayEvent
+--------
+
 .. py:class:: WayEvent(name, direction)
+
+    *Submodel of :py:class:`Serializable`.*
 
     A way :py:class:`Way` events one of the names ``stairs``, ``escalator`` or ``elevator`` and one of the directions ``up`` or ``down``.
 
@@ -890,3 +893,61 @@ Submodels of :py:class:`Serializable`.
     .. attribute:: direction
 
         **Not None.** ``up`` or ``down``
+
+
+TicketList
+----------
+
+.. py:class:: TicketList(all_types: bool=True)
+
+    *Submodel of :py:class:`Serializable`.*
+
+    A list of tickets.
+
+    .. attribute:: currency
+
+        **Not None.** The name or abbreviation of the currency.
+
+    .. attribute:: level_name
+
+        How a level is named at this network.
+
+    .. attribute:: single
+
+        **Not None.** The single ticket as :py:class:`TicketData`.
+
+    .. attribute:: bike
+
+        The single ticket as :py:class:`TicketData`.
+
+    .. attribute:: other
+
+        **Not None.** Other available tickets as a dictionary with the name of the tickets as keys and :py:class:`TicketData` objects as values.
+
+
+TicketData
+----------
+
+Submodels of :py:class:`Serializable`.
+
+.. py:class:: TicketData(authority=None, level=None, price=None, price_child=None)
+
+    *Submodel of :py:class:`Serializable`.*
+
+    Information about a ticket.
+
+    .. attribute:: authority
+
+        The name of the authority selling this ticket.
+
+    .. attribute:: level
+
+        The level of this ticket, e.g. A or something similar, depending on the network
+
+    .. attribute:: price
+
+        **Not None.** The price of this ticket as float.
+
+    .. attribute:: price_child
+
+        The children’s price for this ticket if this ticket is not a ticket for children only but has a different price for children.
