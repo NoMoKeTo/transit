@@ -752,9 +752,6 @@ Trips
             **Not None.** The end :py:class:`GeoLocation` of the trip.
 
 
-TripPart
---------
-
 .. py:class:: TripPart
 
     *Submodel of :py:class:`Serializable`.*
