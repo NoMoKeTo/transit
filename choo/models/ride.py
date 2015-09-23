@@ -49,7 +49,7 @@ class RideIterable(Serializable):
                 raise TypeError('slice indices must be integers or None')
 
             return RideSegment(self, self._get_elem(key.start) if isinstance(key.start, int) else key.start,
-                               self._get_elem(key.end) if isinstance(key.end, int) else key.end)
+                               self._get_elem(key.stop) if isinstance(key.stop, int) else key.end)
 
         return self._get_elem(key).point
 
