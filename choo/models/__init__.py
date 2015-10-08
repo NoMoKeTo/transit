@@ -4,7 +4,7 @@ from .locations import GeoLocation, Coordinates, Platform, Stop, Location, Addre
 from .line import Line, LineType, LineTypes
 from .trip import Trip
 from .tickets import TicketList, TicketData
-from .ride import Ride, RideSegment
+from .ride import Ride, MetaRide, RideSegment
 from .way import Way, WayType, WayEvent
 from .ridepoint import RidePoint, LiveTime
 

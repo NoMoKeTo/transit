@@ -2,7 +2,7 @@
 from ...models import Searchable
 from ...models import Location, Stop, POI, Address
 from ...models import RidePoint, Platform, LiveTime
-from ...models import Trip, Ride, RideSegment, Coordinates, TicketList, TicketData
+from ...models import Trip, MetaRide, Ride, RideSegment, Coordinates, TicketList, TicketData
 from ...models import Line, LineType, LineTypes, Way, WayType, WayEvent
 from datetime import datetime, timedelta
 import xml.etree.ElementTree as ET
@@ -759,7 +759,8 @@ class EFA(API):
     def _parse_ride(self, data):
         """ Parse a itdServingLine Node into something nicer """
         line = Line()
-        ride = Ride(line=line)
+        meta = MetaRide(line=line)
+        ride = Ride(meta=meta)
 
         if 'motType' not in data.attrib:
             return None
@@ -785,11 +786,11 @@ class EFA(API):
                                 diva.attrib['direction'], diva.attrib['project']))
             ridedir = diva.attrib['direction'].strip()
             if ridedir:
-                ride.direction = ridedir
+                meta.direction = ridedir
 
-        ride.number = self._get_attrib(data, 'tC', 'key')
-        if line.id is not None and ride.number is not None:
-            ride.id = '%s:%s' % (line.id, ride.number)
+        meta.number = self._get_attrib(data, 'tC', 'key')
+        if line.id is not None and meta.number is not None:
+            meta.id = '%s:%s' % (line.id, meta.number)
 
         op = data.find('./itdOperator')
         if op is not None:
@@ -805,10 +806,10 @@ class EFA(API):
                 line.product = notrain.attrib['name']
 
             # overrides the diva one
-            ride.number = data.attrib.get('trainNum', ride.number)
+            meta.number = data.attrib.get('trainNum', meta.number)
 
             prefix = data.attrib.get('trainType', '')
-            line.shortname = (prefix + ride.number) if prefix else line.name
+            line.shortname = (prefix + meta.number) if prefix else line.name
 
             if not line.shortname:
                 train = data.find('./itdTrain')

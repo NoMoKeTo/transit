@@ -199,13 +199,22 @@ class RideIterable(Serializable):
         return path
 
 
-class Ride(Collectable, RideIterable):
-    time = fields.DateTime()
+class MetaRide(Collectable):
     line = fields.Model(Line, none=False)
     number = fields.Field(str)
     direction = fields.Field(str)
-    canceled = fields.Field(bool)
     bike_friendly = fields.Field(bool)
+    annotation = fields.List(str)
+
+    def __init__(self, **kwargs):
+        # magic, do not remove
+        super().__init__(**kwargs)
+
+
+class Ride(Collectable, RideIterable):
+    meta = fields.Model(MetaRide, none=False)
+    time = fields.DateTime()
+    canceled = fields.Field(bool)
     infotexts = fields.List(str)
 
     def __init__(self, line=None, number=None, **kwargs):
