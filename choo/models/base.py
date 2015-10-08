@@ -116,7 +116,7 @@ class MetaSearchable(MetaSerializable):
         fields.Model.add_model(cls.Request)
         fields.Model.add_model(cls.Results)
         if name != 'Ride':
-            cls.Results._fields['results'] = fields.List(fields.Tuple(fields.Model(cls), fields.Field(int)))
+            cls.Results._fields['results'] = fields.List(fields.Model(cls))
         MetaSerializable.__init__(cls, name, bases, attrs)
 
 
@@ -148,8 +148,8 @@ class Searchable(Serializable, metaclass=MetaSearchable):
             pass
 
     class Results(Serializable, metaclass=MetaSearchableInner):
-        def __init__(self, results=[], scored=False, **kwargs):
-            results = list(results) if scored else [(r, None) for r in results]
+        def __init__(self, results=[], **kwargs):
+            results = list(results)
             super().__init__(results=results, **kwargs)
 
         def filter(self, request):
@@ -167,13 +167,10 @@ class Searchable(Serializable, metaclass=MetaSearchable):
             return obj
 
         def __iter__(self):
-            yield from (r[0] for r in self.results)
+            yield from self.results
 
         def __len__(self):
             return len(self.results)
-
-        def scored(self):
-            yield from self.results
 
         def append(self, obj, score=None):
             self.results.append((obj, score))
