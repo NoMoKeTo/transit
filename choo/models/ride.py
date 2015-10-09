@@ -238,7 +238,7 @@ class Ride(Collectable, RideIterable):
         self = super(Ride, cls).unserialize(data)
 
         for e in data.get('points', []):
-            elem = Ride.Element.unserialize(e)
+            elem = Ride.Element.unserialize(e) if e is not None else Ride.Element(None)
             elem.prev = self._last
             if self._first is None:
                 self._first = elem
@@ -423,8 +423,7 @@ class Ride(Collectable, RideIterable):
 
         @classmethod
         def unserialize(cls, data):
-            self = super(Serializable, cls).unserialize(data)
-            self.point = RidePoint.unserialize(data)
+            self = Ride.Element(RidePoint.unserialize(data) if data is not None else None)
             self.path_to_next = [Coordinates.unserialize(c) for c in data.get('path_to_next', [])]
             return self
 

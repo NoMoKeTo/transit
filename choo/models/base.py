@@ -212,9 +212,6 @@ class Searchable(Serializable, metaclass=MetaSearchable):
             return super(Searchable.Result, cls).unserialize(newdata)
 
 
-
-
-
 class NetworkID(Serializable):
     pass
 
