@@ -107,16 +107,20 @@ class MetaSearchable(MetaSerializable):
             attrs['Request'] = type('Request', (bases[0].Request,), {'__module__': attrs['__init__'].__module__})
         if 'Results' not in attrs:
             attrs['Results'] = type('Results', (bases[0].Results,), {'__module__': attrs['__init__'].__module__})
+        if 'Result' not in attrs:
+            attrs['Result'] = type('Result', (bases[0].Result,), {'__module__': attrs['__init__'].__module__})
 
         return super(MetaSearchable, mcs).__new__(mcs, name, bases, attrs)
 
     def __init__(cls, name, bases, attrs):
         cls.Request.Model = cls
         cls.Results.Model = cls
+        cls.Result.Model = cls
         fields.Model.add_model(cls.Request)
         fields.Model.add_model(cls.Results)
-        if name != 'Ride':
-            cls.Results._fields['results'] = fields.List(fields.Model(cls))
+        fields.Model.add_model(cls.Result)
+        cls.Results._fields['results'] = fields.List(fields.Model(cls.Result))
+        cls.Result._fields['result'] = fields.Model(cls, none=False)
         MetaSerializable.__init__(cls, name, bases, attrs)
 
 
@@ -149,7 +153,7 @@ class Searchable(Serializable, metaclass=MetaSearchable):
 
     class Results(Serializable, metaclass=MetaSearchableInner):
         def __init__(self, results=[], **kwargs):
-            results = list(results)
+            results = [(self.Model.Result(r) if isinstance(r, self.Model) else r) for r in results]
             super().__init__(results=results, **kwargs)
 
         def filter(self, request):
@@ -173,10 +177,23 @@ class Searchable(Serializable, metaclass=MetaSearchable):
             return len(self.results)
 
         def append(self, obj, score=None):
-            self.results.append((obj, score))
+            if isinstance(obj, self.Model):
+                self.results.append(self.Result(obj))
+            elif isinstance(obj, self.Result):
+                self.results.append(obj)
+            else:
+                raise AssertionError('Can only append compatible types!')
 
         def __getitem__(self, key):
             return self.results[key]
+
+    class Result(Serializable, metaclass=MetaSearchableInner):
+        def __init__(self, result=None, **kwargs):
+            super().__init__(result=result, **kwargs)
+
+        #def serialize(self, **kwargs):
+        #    return self.result.serialize()
+
 
 
 class NetworkID(Serializable):

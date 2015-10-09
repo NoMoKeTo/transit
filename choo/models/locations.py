@@ -119,10 +119,15 @@ class Location(Collectable, GeoLocation):
         name = fields.Field(str)
         city = fields.Field(str)
 
-        def __init__(self):
-            super().__init__()
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
             self.name = None
             self.city = None
+
+    class Result(Searchable.Result):
+        score = fields.Field(int)
+        distance = fields.Field(int)
+        duration = fields.Timedelta()
 
 
 class Stop(Location):

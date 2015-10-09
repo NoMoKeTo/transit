@@ -353,7 +353,7 @@ class EFA(API):
         return default
 
     def _parse_stop_line(self, data):
-        """ Parse an ODV line (for example an AssignedStop) """
+        """ Parse an AssignedStop ODV line """
         stop = Stop(country=self._parse_stopid_country(data.attrib['stopID']),
                     name=data.text,
                     city=self._get_attrib(data, 'locality', 'place'),
@@ -369,7 +369,15 @@ class EFA(API):
             stop.lat = float(data.attrib['y']) / 1000000
             stop.lon = float(data.attrib['x']) / 1000000
 
-        return stop
+        result = Stop.Result(stop)
+        if 'distanceTime' in data.attrib:
+            result.duration = timedelta(minutes=int(data.attrib['distanceTime']))
+            result.distance = 0
+
+        if 'distance' in data.attrib:
+            result.distance = int(data.attrib['distance'])
+
+        return result
 
     def _parse_location(self, data):
         """ Parse an ODV (OriginDestinationVia) XML node """
@@ -412,7 +420,7 @@ class EFA(API):
             near_stops = []
             for near_stop in data.findall('./itdOdvAssignedStops/itdOdvAssignedStop'):
                 stop = self._parse_stop_line(near_stop)
-                if stop != result:
+                if stop.result != result:
                     near_stops.append(stop)
             if near_stops:
                 result.near_stops = Stop.Results(near_stops)
