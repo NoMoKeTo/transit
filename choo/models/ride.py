@@ -234,7 +234,10 @@ class Ride(Collectable, RideIterable):
         return data
 
     @classmethod
-    def unserialize(cls, data):
+    def unserialize(cls, data, part_of_segment=False):
+        if not part_of_segment and ('@origin' in data or '@destination' in data):
+            return RideSegment.unserialize(data)
+
         self = super(Ride, cls).unserialize(data)
 
         for e in data.get('points', []):
@@ -461,21 +464,24 @@ class RideSegment(TripPart, RideIterable):
     def serialize(self, **kwargs):
         data = super().serialize(**kwargs)
         if self._origin is not None:
-            data['origin'] = self.ride._elem_index(self._origin)
+            data['@origin'] = self.ride._elem_index(self._origin)
 
         if self._destination is not None:
-            data['destination'] = self.ride._elem_index(self._destination)
+            data['@destination'] = self.ride._elem_index(self._destination)
+        data.update(data['ride'])
+        del data['ride']
         return data
 
     @classmethod
     def unserialize(cls, data):
-        self = super(RideSegment, cls).unserialize(data)
+        assert data.get('type', 'Ride') == 'Ride'
+        self = cls(Ride.unserialize(data, True))
 
-        origin = data.get('origin')
+        origin = data.get('@origin')
         if origin is not None:
             self._origin = self.ride._get_elem(origin)
 
-        destination = data.get('destination')
+        destination = data.get('@destination')
         if destination is not None:
             self._destination = self.ride._get_elem(destination)
 
