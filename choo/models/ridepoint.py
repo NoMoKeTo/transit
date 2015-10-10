@@ -74,7 +74,7 @@ class RidePoint(Serializable):
     platform = fields.Model(Platform, none=False)
     arrival = fields.Model(LiveTime)
     departure = fields.Model(LiveTime)
-    passthrough = fields.Field(bool, none=False)
+    passthrough = fields.Field(bool)
 
     def __init__(self, platform=None, arrival=None, departure=None, **kwargs):
         super().__init__(platform=platform, arrival=arrival, departure=departure, **kwargs)
