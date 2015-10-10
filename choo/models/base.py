@@ -204,9 +204,10 @@ class Searchable(Serializable, metaclass=MetaSearchable):
 
         @classmethod
         def unserialize(cls, data):
-            result = {name: value for name, value in data.items() if not name.startswith('@')}
+            props = cls._fields.keys()
+            result = {name: value for name, value in data.items() if name[1:] not in props}
 
-            newdata = {name[1:]: value for name, value in data.items() if name.startswith('@')}
+            newdata = {name[1:]: value for name, value in data.items() if name[1:] in props}
             if data['type'] == 'RideSegment':
                 newdata['type'] = 'Ride.Result'
             else:
