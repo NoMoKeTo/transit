@@ -194,7 +194,6 @@ class Searchable(Serializable, metaclass=MetaSearchable):
         def serialize(self, **kwargs):
             me = super().serialize(**kwargs)
             result = me['result']
-            result['type'] = me['type']
             del me['result']
             del me['type']
             result.update(OrderedDict(('@%s' % name, value) for name, value in me.items()))
@@ -203,10 +202,9 @@ class Searchable(Serializable, metaclass=MetaSearchable):
         @classmethod
         def unserialize(cls, data):
             result = {name: value for name, value in data.items() if not name.startswith('@')}
-            result['type'] = cls.Model.__name__
 
             newdata = {name[1:]: value for name, value in data.items() if name.startswith('@')}
-            newdata['type'] = data['type']
+            newdata['type'] = data['type']+'.Result'
             newdata['result'] = result
 
             return super(Searchable.Result, cls).unserialize(newdata)
