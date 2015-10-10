@@ -120,7 +120,10 @@ class MetaSearchable(MetaSerializable):
         fields.Model.add_model(cls.Results)
         fields.Model.add_model(cls.Result)
         cls.Results._fields['results'] = fields.List(fields.Model(cls.Result))
-        cls.Result._fields['result'] = fields.Model(cls, none=False)
+        if cls.__name__ == 'Ride':
+            cls.Result._fields['result'] = fields.Model('RideSegment', none=False)
+        else:
+            cls.Result._fields['result'] = fields.Model(cls, none=False)
         MetaSerializable.__init__(cls, name, bases, attrs)
 
 
@@ -153,7 +156,7 @@ class Searchable(Serializable, metaclass=MetaSearchable):
 
     class Results(Serializable, metaclass=MetaSearchableInner):
         def __init__(self, results=[], **kwargs):
-            results = [(self.Model.Result(r) if isinstance(r, self.Model) else r) for r in results]
+            results = [(r if isinstance(r, self.Model.Result) else self.Model.Result(r)) for r in results]
             super().__init__(results=results, **kwargs)
 
         def filter(self, request):
@@ -204,7 +207,10 @@ class Searchable(Serializable, metaclass=MetaSearchable):
             result = {name: value for name, value in data.items() if not name.startswith('@')}
 
             newdata = {name[1:]: value for name, value in data.items() if name.startswith('@')}
-            newdata['type'] = data['type']+'.Result'
+            if data['type'] == 'RideSegment':
+                newdata['type'] = 'Ride.Result'
+            else:
+                newdata['type'] = data['type'].replace('RideSegment', 'Ride')+'.Result'
             newdata['result'] = result
 
             return super(Searchable.Result, cls).unserialize(newdata)

@@ -427,13 +427,6 @@ class Ride(Collectable, RideIterable):
             self.path_to_next = [Coordinates.unserialize(c) for c in data.get('path_to_next', [])]
             return self
 
-    class Results(Collectable.Results):
-        results = fields.List(fields.Tuple(fields.Model('RideSegment'), fields.Field(int)))
-
-        def __init__(self, results=[], scored=False):
-            self.content = RideSegment
-            super().__init__(results, scored)
-
 
 class RideSegment(TripPart, RideIterable):
     ride = fields.Model(Ride, none=False)
