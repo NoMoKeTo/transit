@@ -543,6 +543,9 @@ class EFA(API):
                 if destination is not None:
                     ride.append(RidePoint(Platform(destination)))
 
+            if ride[0] is not None and ride.meta.id is not None:
+                ride.id = '%s:%s' % (ride.meta.id, ride[0].departure.time.strftime('%Y%m%d'))
+
             # Return RideSegment from the Station we depart from on
             results.append(ride[pointer:])
         return Ride.Results(results)
