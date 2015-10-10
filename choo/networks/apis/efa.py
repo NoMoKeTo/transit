@@ -324,7 +324,7 @@ class EFA(API):
             lines = lineslist.findall('./itdServingLine')
             for line in lines:
                 ride, origin, destination = self._parse_ride(line)
-                line = ride.line
+                line = ride.meta.line
                 line.first_stop = origin
                 line.last_stop = destination
                 # line.low_quality = True
