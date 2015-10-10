@@ -505,6 +505,7 @@ class EFA(API):
                     after_delay = delay
 
             prevs = False
+            start = 0
             for pointdata in departure.findall('./itdPrevStopSeq/itdPoint'):
                 point = self._parse_ridepoint(pointdata)
                 if point is not None:
@@ -517,8 +518,9 @@ class EFA(API):
                             point.departure.delay = before_delay
                     prevs = True
                     ride.append(point)
+                    start += 1
 
-            pointer = ride.append(mypoint)
+            ride.append(mypoint)
 
             onwards = False
             for pointdata in departure.findall('./itdOnwardStopSeq/itdPoint'):
@@ -538,6 +540,7 @@ class EFA(API):
                 ride.prepend(None)
                 if origin is not None:
                     ride.prepend(RidePoint(Platform(origin)))
+                    start += 1
 
                 ride.append(None)
                 if destination is not None:
@@ -547,7 +550,7 @@ class EFA(API):
                 ride.id = '%s:%s' % (ride.meta.id, ride[0].departure.time.strftime('%Y%m%d'))
 
             # Return RideSegment from the Station we depart from on
-            results.append(ride[pointer:])
+            results.append(ride[start:])
         return Ride.Results(results)
 
     def _parse_trips(self, data):
