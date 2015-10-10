@@ -403,7 +403,7 @@ class Ride(Collectable, RideIterable):
         return None
 
     def __repr__(self):
-        return '<Ride %s %s>' % (self.number, repr(self.line))
+        return '<Ride %s %s>' % (self.meta.number, repr(self.meta.line))
 
     class Element(Serializable):
         def __init__(self, point, prev=None, next_=None):
