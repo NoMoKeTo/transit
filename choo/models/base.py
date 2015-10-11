@@ -216,6 +216,21 @@ class Searchable(Serializable, metaclass=MetaSearchable):
 
             return super(Searchable.Result, cls).unserialize(newdata)
 
+        def __getattr__(self, name):
+            return getattr(self.result, name)
+
+        def __getitem__(self, key):
+            return self.result[key]
+
+        def __iter__(self):
+            yield from self.result
+
+        def __contains__(self, obj):
+            return obj in self.result
+
+        def __len__(self):
+            return len(self.result)
+
 
 class NetworkID(Serializable):
     pass
