@@ -405,6 +405,9 @@ class Ride(Collectable, RideIterable):
 
         return None
 
+    def __getattr__(self, name):
+        return getattr(self.meta, name)
+
     def __repr__(self):
         return '<Ride %s %s>' % (self.meta.number, repr(self.meta.line))
 
@@ -502,6 +505,9 @@ class RideSegment(TripPart, RideIterable):
     @property
     def arrival(self):
         return self[-1].arrival
+
+    def __getattr__(self, name):
+        return getattr(self.ride, name)
 
     def __eq__(self, other):
         if not isinstance(other, RideSegment):
