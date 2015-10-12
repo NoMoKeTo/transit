@@ -724,6 +724,8 @@ class EFA(API):
                 ride.append(None)
                 last -= 1
 
+            last += 1
+
             segment = ride[first:last]
             segment.set_path(path)
             return segment
