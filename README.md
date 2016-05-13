@@ -2,7 +2,7 @@
 
 choo is a uniform interface for public transport APIs written in Python 3. A JSON interface is available via command line and HTTP to use it with other languages.
 
-![UML Model Overview](uml.png)
+![UML Model Overview](res/uml.png)
 
 ## Installation
 
