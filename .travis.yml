@@ -2,7 +2,9 @@ language: python
 python:
     - "3.4"
 install:
-    - pip install -e .
+    - pip install -e src
     - pip install flake8
+before_script:
+    - cd src
 script:
     - flake8 choo --max-line-length 119
