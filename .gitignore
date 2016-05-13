@@ -1,5 +1,9 @@
 dump.xml
 MANIFEST
+tags
+.tags
+doc/_build
+.coverage
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
