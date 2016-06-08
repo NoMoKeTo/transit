@@ -1,88 +1,22 @@
 #!/usr/bin/env python3
-from .base import Searchable, TripPart
-from .way import WayType
-from .locations import Location, GeoLocation
-from .ride import Ride, RideSegment
-from .line import Line, LineType, LineTypes
+from datetime import timedelta
+from typing import Iterable
+
+from ..types import Coordinates, LineTypes, WayEvent, WayType
+from .base import Field, Model
+from .locations import Location
 from .tickets import TicketList
-from datetime import timedelta, datetime
-from . import fields
+
+RideSegment = 1
 
 
-class Trip(Searchable):
-    _parts = fields.List(fields.Model(TripPart, none=False))
-    tickets = fields.Model(TicketList)
+class Trip(Model):
+    parts = Field(list)
+    tickets = Field(TicketList)
 
     def __init__(self, **kwargs):
         # magic, do not remove
         super().__init__(**kwargs)
-
-    class Request(Searchable.Request):
-        walk_speed = fields.Field(str, default='normal')
-        origin = fields.Model(GeoLocation)
-        via = fields.List(fields.Model(GeoLocation))
-        destination = fields.Model(GeoLocation)
-        departure = fields.Model(datetime)
-        arrival = fields.Model(datetime)
-        linetypes = fields.Model(LineTypes)
-        max_changes = fields.Field(int)
-
-        with_bike = fields.Field(bool, default=False)
-        wheelchair = fields.Field(bool, default=False)
-        low_floor_only = fields.Field(bool, default=False)
-        allow_solid_stairs = fields.Field(bool, default=True)
-        allow_escalators = fields.Field(bool, default=True)
-        allow_elevators = fields.Field(bool, default=True)
-
-        waytype_origin = fields.Model(WayType, default=WayType('walk'))
-        waytype_via = fields.Model(WayType, default=WayType('walk'))
-        waytype_destination = fields.Model(WayType, default=WayType('walk'))
-
-        wayduration_origin = fields.Field(timedelta, default=timedelta(minutes=10))
-        wayduration_via = fields.Field(timedelta, default=timedelta(minutes=10))
-        wayduration_destination = fields.Field(timedelta, default=timedelta(minutes=10))
-
-        def __init__(self, **kwargs):
-            # magic, do not remove
-            super().__init__(**kwargs)
-
-        def _matches(self, obj):
-            if self.origin != obj.origin or self.destination != obj.destination:
-                return False
-
-            if not obj.wayonly:
-                if self.departure is not None and self.departure < obj.departure:
-                    return False
-
-                if self.arrival is not None and self.arrival > obj.arrival:
-                    return False
-
-            for i, part in enumerate(obj):
-                if isinstance(part, RideSegment):
-                    if part.line.linetype not in self.linetypes:
-                        return False
-                else:
-                    if part.waytype == WayType('walk'):
-                        continue
-                    if i == 0:
-                        if self.waytype_origin != part.waytype:
-                            return False
-                    elif i + 1 == len(obj):
-                        if self.waytype_destination != part.waytype:
-                            return False
-                    else:
-                        if self.waytype_via != part.waytype:
-                            return False
-
-            return True
-
-    class Results(Searchable.Results):
-        origin = fields.Model(Location, none=True)
-        via = fields.Model(Location, none=True)
-        destination = fields.Model(Location, none=True)
-
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
 
     @property
     def origin(self):
@@ -94,14 +28,15 @@ class Trip(Searchable):
 
     @property
     def departure(self):
-        delta = timedelta(0)
+        # delta = timedelta(0)
         for part in self._parts:
-            if isinstance(part, RideSegment):
-                return (part.departure - delta) if part.departure else None
-            elif part.duration is None:
-                return None
-            else:
-                delta += part.duration
+            # if isinstance(part, RideSegment):
+            #     return (part.departure - delta) if part.departure else None
+            # elif part.duration is None:
+            #     return None
+            # else:
+            #     delta += part.duration
+            pass
 
     @property
     def arrival(self):
@@ -148,18 +83,6 @@ class Trip(Searchable):
                 return False
         return True
 
-    def to_request(self):
-        r = Trip.Request()
-        r.walk_speed = self.walk_speed
-        r.origin = self.origin
-        r.destination = self.destination
-        r.departure = self.departure
-        r.arrival = self.arrival
-        r.linetypes = self.linetypes
-        r.max_changtes = self.max_changes
-        r.bike_friendly = self.bike_friendly
-        return r
-
     def __len__(self):
         return len(self._parts)
 
@@ -170,6 +93,7 @@ class Trip(Searchable):
         if isinstance(obj, RideSegment):
             return obj in self._parts
 
+        """
         if isinstance(obj, Ride):
             compare = lambda part, obj: part.ride == obj
         elif isinstance(obj, Ride.Request):
@@ -186,10 +110,13 @@ class Trip(Searchable):
             # todo: here be more, Way, Stop, Platform, …
             raise NotImplementedError()
 
+
         for part in self.parts:
             if isinstance(part, RideSegment) and compare(part, obj):
                 return True
+
         return False
+        """
 
     def __repr__(self):
         return '<Trip %s %s - %s %s>' % (repr(self.origin), str(self.departure), repr(self.origin), str(self.arrival))
@@ -206,3 +133,42 @@ class Trip(Searchable):
 
     def __iter__(self):
         yield from self._parts
+
+
+class Way(Model):
+    waytype = Field(WayType)
+    origin = Field(Location)
+    destination = Field(Location)
+    distance = Field(float)
+    duration = Field(timedelta)
+    events = Field(WayEvent)
+    path = Field(Iterable[Coordinates])
+
+    def __init__(self, waytype=None, origin=None, destination=None, distance=None, **kwargs):
+        super().__init__(waytype=(WayType('walk') if waytype is None else waytype),
+                         origin=origin, destination=destination, distance=distance, **kwargs)
+
+    def __eq__(self, other):
+        if not isinstance(other, Way):
+            return False
+
+        if self.waytype != other.waytype:
+            return False
+
+        compared = self.origin == other.origin
+        if compared is not True:
+            return compared
+
+        compared = self.destination == other.destination
+        if compared is not True:
+            return compared
+
+        return True
+
+    def __repr__(self):
+        distance = ''
+        if self.distance:
+            distance = ' %dm' % self.distance
+        return '<Way %s %dmin%s %s %s>' % (
+            str(self.waytype), self.duration.total_seconds() / 60,
+            distance, repr(self.origin), repr(self.destination))

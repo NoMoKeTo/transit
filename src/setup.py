@@ -12,7 +12,7 @@ setup(
     url='https://github.com/NoMoKeTo/choo',
     install_requires=['requests'],
     license='Apache License 2.0',
-    scripts=['choo/choo', 'choo/choo-server'],
+    scripts=['choo/choo-cli', 'choo/choo-server'],
     classifiers=[
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',

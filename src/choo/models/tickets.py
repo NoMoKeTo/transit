@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-from .base import Serializable
-from . import fields
+from typing import Mapping, Union
+
+from .base import Field, Model
 
 
-class TicketList(Serializable):
-    currency = fields.Field(str, none=False)
-    level_name = fields.Field(str)
-    single = fields.Model('TicketData', none=False)
-    bike = fields.Model('TicketData')
-    other = fields.Dict(fields.Field(str), fields.Model('TicketData'), none=False)
+class TicketList(Model):
+    currency = Field(str)
+    level_name = Field(str)
+    single = Field(Union['TicketData'])
+    bike = Field(Union['TicketData'])
+    other = Field(Mapping[str, 'TicketData'])
 
     def __init__(self, **kwargs):
         # magic, do not remove
@@ -18,11 +19,11 @@ class TicketList(Serializable):
         return '<TicketList %s %s (+%d)>' % (self.currency, repr(self.single), len(self.other))
 
 
-class TicketData(Serializable):
-    authority = fields.Field(str)
-    level = fields.Field(str)
-    price = fields.Field(float, none=False)
-    price_child = fields.Field(float)
+class TicketData(Model):
+    authority = Field(str)
+    level = Field(str)
+    price = Field(float)
+    price_child = Field(float)
 
     def __init__(self, authority=None, level=None, price=None, price_child=None, **kwargs):
         super().__init__(authority=authority, level=level, price=price, price_child=price_child, **kwargs)
