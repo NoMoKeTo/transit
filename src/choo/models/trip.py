@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
 from datetime import timedelta
 from typing import Iterable
-
 from ..types import Coordinates, LineTypes, WayEvent, WayType
 from .base import Field, Model
 from .locations import Location

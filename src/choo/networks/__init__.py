@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from .apis.base import API
 from .de import *  # NOQA
 

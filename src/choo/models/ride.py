@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from typing import Iterable
 
 from ..types import LineType, LiveTime

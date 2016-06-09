@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from ...models import Searchable
 from ...models import Location, Stop, POI, Address
 from ...models import RidePoint, Platform, LiveTime
