@@ -7,11 +7,17 @@ class MetaQuery(type):
     def __new__(mcs, name, bases, attrs):
         not_field_attrs = {n: v for n, v in attrs.items() if not isinstance(v, Field)}
         cls = super(MetaQuery, mcs).__new__(mcs, name, bases, not_field_attrs)
-        cls._fields = attrs['Model']._fields
-        cls._fields.update(OrderedDict(sorted(
-            [(n, v.set_model_and_name(cls, n)) for n, v in attrs.items() if isinstance(v, Field)],
-            key=lambda v: v[1].i)
-        ))
+        try:
+            Model = attrs['Model']
+        except KeyError:
+            for base in bases:
+                if hasattr(base, 'Model'):
+                    Model = base.Model
+                    break
+            else:
+                raise TypeError('Query without Model!')
+
+        cls._fields = Model._fields
 
         cls._settings = OrderedDict()
         for base in cls.__bases__:
