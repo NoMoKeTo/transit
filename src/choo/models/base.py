@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from ..exceptions import ObjectNotFound
 
 
 class Field:
@@ -17,6 +18,9 @@ class Field:
         self.name = name
         return self
 
+    def validate(self, value):
+        return issubclass(type(value), self.types)
+
     def __get__(self, obj, cls):
         if obj is None:
             return self
@@ -26,7 +30,7 @@ class Field:
             raise AttributeError('Attribute %s is not set.' % self.name)
 
     def __set__(self, obj, value):
-        if not issubclass(type(value), self.types):
+        if not self.validate(value):
             raise TypeError('Invalid type for attribute %s.' % self.name)
         obj._data[self.name] = value
 
@@ -45,10 +49,10 @@ class choo_property(object):
         if obj is None:
             return self
         name = self.func.__name__
-        types = getattr(obj.__bases__[0], name).types
+        field = getattr(obj.__bases__[0], name)
         value = obj.__dict__[name] = self.func(obj)
 
-        if not issubclass(type(value), types):
+        if not field.validate(value):
             raise TypeError('Invalid type for attribute %s.' % self.name)
 
         return value
@@ -62,6 +66,7 @@ class choo_property(object):
 
 class MetaModel(type):
     def __new__(mcs, name, bases, attrs):
+        attrs['NotFound'] = type('NotFound', (ObjectNotFound, ), {'__module__': attrs['__module__']})
         cls = super(MetaModel, mcs).__new__(mcs, name, bases, attrs)
         cls._fields = OrderedDict()
         for base in cls.__bases__:

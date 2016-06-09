@@ -4,13 +4,35 @@ from ..types import Coordinates, LineTypes, WayEvent, WayType
 from .base import Field, Model
 from .locations import Location
 from .tickets import TicketList
+from ..types import LiveTime
 
 RideSegment = 1
 
 
 class Trip(Model):
+    origin = Field(Location)
+    via = Field(Iterable[Location])
+    destination = Field(Location)
     parts = Field(list)
     tickets = Field(TicketList)
+    departure = Field(LiveTime)
+    arrival = Field(LiveTime)
+    linetypes = Field(LineTypes)
+
+    with_bike = Field(bool)
+    wheelchair = Field(bool)
+    low_floor_only = Field(bool)
+    no_solid_stairs = Field(bool)
+    no_escalators = Field(bool)
+    no_elevators = Field(bool)
+
+    waytype_origin = Field(WayType)
+    waytype_via = Field(WayType)
+    waytype_destination = Field(WayType)
+
+    wayduration_origin = Field(timedelta)
+    wayduration_via = Field(timedelta)
+    wayduration_destination = Field(timedelta)
 
     def __init__(self, **kwargs):
         # magic, do not remove

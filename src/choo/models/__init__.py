@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from .base import Model
 from .locations import Location, Platform, Address, Stop, POI
 from .ride import Ride, MetaRide, Line, RidePoint
