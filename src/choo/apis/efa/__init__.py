@@ -1,7 +1,6 @@
 from ..base import API
 from .queries import StopQuery
 from ...models import Stop, Address, POI
-from .models.locations import CityOnlyOdvStop, OdvNameElemPOI, OdvNameElemStop, OdvNameElemAddress
 
 import requests
 from datetime import datetime
@@ -59,50 +58,3 @@ class EFA(API):
             r = {wrap % n: v for n, v in r.items()}
 
         return r
-
-    def _parse_location(self, data):
-        """ Parse an ODV (OriginDestinationVia) XML node """
-        odvtype = data.attrib['type']
-
-        # Place.city
-        p = data.find('./itdOdvPlace')
-        cityid = None
-        if p.attrib['state'] == 'empty':
-            city = None
-        elif p.attrib['state'] != 'identified':
-            if p.attrib['state'] == 'list':
-                return 'cities', (CityOnlyOdvStop(self, item) for item in p.find('./odvPlaceElem'))
-            return 'none', ()
-        else:
-            city = p.find('./odvPlaceElem').text
-
-        # Location.name
-        n = data.find('./itdOdvName')
-        if n.attrib['state'] == 'empty':
-            if city is not None:
-                return 'cities', (CityOnlyOdvStop(self, city), )
-            return 'none', ()
-
-        if n.attrib['state'] == 'identified':
-            ne = n.find('./odvNameElem')
-            # AnyTypes are used in some EFA instances instead of ODV types
-            odvtype = ne.attrib.get('anyType', odvtype)
-            return odvtype, (self._parse_location_name(ne, city, cityid, odvtype), )
-
-        if n.attrib['state'] != 'list':
-            return 'none', ()
-
-        return 'mixed', (self._parse_location_name(item, city, cityid, odvtype)
-                         for item in sorted(n.findall('./odvNameElem'), reverse=True,
-                                            key=lambda e: e.attrib.get('matchQuality', 0)))
-
-    def _parse_location_name(self, data, city, cityid, odvtype):
-        """ Parses the odvNameElem of an ODV """
-        if odvtype == 'stop':
-            return OdvNameElemStop(self, data, city)
-        elif odvtype == 'poi':
-            return OdvNameElemPOI(self, data, city)
-        elif odvtype in ('street', 'singlehouse', 'coord', 'address'):
-            return OdvNameElemAddress(self, data, city)
-        else:
-            raise NotImplementedError('Unknown odvtype: %s' % odvtype)
