@@ -34,10 +34,11 @@ class Query(metaclass=MetaQuery):
     Model = Model
     _settings = {'limit': None}
 
-    def __init__(self):
+    def __init__(self, network):
         if self.__class__ == Query:
             raise TypeError('only subclasses of Query can be initialised')
 
+        self.network = network
         self._data = self._settings.copy()
         self._cached_results = None
         self._results_generator = None
