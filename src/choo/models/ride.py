@@ -2,10 +2,10 @@ from typing import Iterable
 
 from ..types import LineType, LiveTime
 from .base import Field, Model
-from .locations import Platform, Stop, ModelWithIDsMixin
+from .locations import Platform, Stop, ModelWithIDs
 
 
-class Line(Model, ModelWithIDsMixin):
+class Line(ModelWithIDs):
     linetype = Field(LineType)
     product = Field(str)
     name = Field(str)
@@ -23,7 +23,7 @@ class Line(Model, ModelWithIDsMixin):
             return '<Line %s %s>' % (str(self.linetype), repr(self.name))
 
 
-class MetaRide(Model, ModelWithIDsMixin):
+class MetaRide(ModelWithIDs):
     line = Field(Line)
     number = Field(str)
     direction = Field(str)
@@ -31,7 +31,7 @@ class MetaRide(Model, ModelWithIDsMixin):
     annotation = Field(Iterable[str])
 
 
-class Ride(Model, ModelWithIDsMixin):
+class Ride(ModelWithIDs):
     meta = Field(MetaRide)
     canceled = Field(bool)
     infotexts = Field(Iterable[str])

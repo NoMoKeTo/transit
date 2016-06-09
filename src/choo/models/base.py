@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from ..exceptions import ObjectNotFound
-from typing import Mapping, Union, Iterable
+from typing import Mapping, Union, Iterable, Optional
 
 
 class Field:
@@ -10,7 +10,7 @@ class Field:
     _i = 0
 
     def __init__(self, types):
-        self.types = types
+        self.types = Optional[types]
         self.i = Field._i
         Field._i += 1
 
@@ -43,15 +43,15 @@ class Field:
 
 
 class choo_property(object):
-    def __init__(self, func):
+    def __init__(self, func, name=None):
         self.func = func
+        self.name = name or func.__name__
 
     def __get__(self, obj, cls):
         if obj is None:
             return self
-        name = self.func.__name__
-        field = getattr(obj.__bases__[0], name)
-        value = obj.__dict__[name] = self.func(obj)
+        field = obj.Model._fields[self.name]
+        value = obj.__dict__[self.name] = self.func(obj)
 
         if not field.validate(value):
             raise TypeError('Invalid type for attribute %s.' % self.name)
@@ -65,18 +65,34 @@ class choo_property(object):
         raise AttributeError("can't delete a choo property")
 
 
+def give_none(self):
+    return None
+
+
+class DynamicModel:
+    def __init__(self):
+        pass
+
+
 class MetaModel(type):
     def __new__(mcs, name, bases, attrs):
-        attrs['NotFound'] = type('NotFound', (ObjectNotFound, ), {'__module__': attrs['__module__']})
         cls = super(MetaModel, mcs).__new__(mcs, name, bases, attrs)
+        cls.NotFound = type('NotFound', (ObjectNotFound, ), {'__module__': attrs['__module__']})
         cls._fields = OrderedDict()
         for base in cls.__bases__:
-            if base != object:
-                cls._fields.update(base._fields)
+            cls._fields.update(getattr(base, '_fields', {}))
+
         cls._fields.update(OrderedDict(sorted(
             [(n, v.set_model_and_name(cls, n)) for n, v in attrs.items() if isinstance(v, Field)],
             key=lambda v: v[1].i)
         ))
+
+        if issubclass(cls, DynamicModel):
+            for name in cls._fields:
+                if not hasattr(cls, name):
+                    setattr(cls, name, choo_property(give_none, name))
+        else:
+            cls.Dynamic = type('Dynamic', (DynamicModel, ), {'__module__': attrs['__module__'], 'Model': cls})
         return cls
 
 
@@ -95,5 +111,5 @@ class Model(metaclass=MetaModel):
         return OrderedDict(data)
 
 
-class ModelWithIDsMixin:
+class ModelWithIDs(Model):
     ids = Field(Mapping[str, Union[str, Iterable[str]]])

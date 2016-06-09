@@ -40,12 +40,12 @@ class Query(metaclass=MetaQuery):
 
         self.network = network
         self._data = self._settings.copy()
-        self._cached_results = None
+        self._cached_results = []
         self._results_generator = None
         self._results_done = False
 
     def update(self, **kwargs):
-        result = self.__class__()
+        result = self.__class__(self.network)
 
         for name, value in kwargs.items():
             try:
@@ -64,13 +64,19 @@ class Query(metaclass=MetaQuery):
         if not isinstance(obj, self.Model):
             raise TypeError('Expected %s instance, got %s' % (self.Model.__name__, repr(obj)))
 
-        r = self.update({name: getattr(obj, name, None) for name in self._fields}).limit(1).execute()
+        r = self.update(**{name: getattr(obj, name, None) for name in self._fields}).setlimit(1).execute()
         if not r:
             raise self.Model.NotFound
-        return r[0]
+        return next(iter(r))
 
     def _execute(self, obj):
         raise TypeError('Cannot execute query not bound to a network')
+
+    def setlimit(self, limit):
+        if limit is not None and (not isinstance(limit, int) or limit < 1):
+            raise TypeError('limit has to be None or int > 1')
+        self._data['limit'] = limit
+        return self
 
     def execute(self):
         if self._results_generator is None:

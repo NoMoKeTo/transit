@@ -1,14 +1,17 @@
 from typing import Union
 
 from ..types import Coordinates
-from .base import Field, Model, ModelWithIDsMixin
+from .base import Field, Model, ModelWithIDs
 
 
 class Location(Model):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     coords = Field(Coordinates)
 
 
-class Platform(Location, ModelWithIDsMixin):
+class Platform(Location, ModelWithIDs):
     stop = Field(Union['Stop'])
     ifopt = Field(str)
     name = Field(str)
@@ -37,6 +40,7 @@ class Address(Location):
     country = Field(str)
     city = Field(str)
     address = Field(str)
+    name = Field(str)
     street = Field(str)
     number = Field(str)
     # near_stops = fields.Model('Stop.Results')
@@ -44,7 +48,16 @@ class Address(Location):
     def __init__(self, country=None, city=None, name=None, **kwargs):
         if self.__class__ == Location:
             raise RuntimeError('Only instances of Location subclasses are allowed!')
-        super().__init__(country=country, city=city, name=name, **kwargs)
+
+        super().__init__(**kwargs)
+        if country:
+            self.country = country
+
+        if city:
+            self.city = city
+
+        if name:
+            self.name = name
 
     def __repr__(self):
         return '%s(%s, %s, %s)' % (self.__class__.__name__, repr(self.country), repr(self.city), repr(self.name))
@@ -60,10 +73,9 @@ class Address(Location):
         return None
 
 
-class Stop(Address, ModelWithIDsMixin):
+class Stop(Address, ModelWithIDs):
     ifopt = Field(str)
     uic = Field(str)
-    name = Field(str)
     # rides = fields.Model('Ride.Results')
     # lines = fields.Model('Line.Results')
 
@@ -91,9 +103,7 @@ class Stop(Address, ModelWithIDsMixin):
         return None
 
 
-class POI(Address, ModelWithIDsMixin):
-    name = Field(str)
-
+class POI(Address, ModelWithIDs):
     def __init__(self, country=None, city=None, name=None, **kwargs):
         super().__init__(country=country, city=city, name=name, **kwargs)
 

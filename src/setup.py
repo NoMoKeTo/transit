@@ -9,7 +9,7 @@ setup(
     author='Nicole Klünder',
     author_email='choo@nomoketo.de',
     url='https://github.com/nomoketo/choo',
-    install_requires=['requests'],
+    install_requires=['requests', 'defusedxml'],
     license='Apache License 2.0',
     scripts=['choo/choo-cli', 'choo/choo-server'],
     classifiers=[

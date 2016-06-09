@@ -1,27 +1,31 @@
 #!/usr/bin/env python3
 from choo.networks.de import vrr
-from choo.models import Serializable, Stop, Location, Trip
-import json
+from choo.models import Stop
+import code
 
 # collection = Collection('test')
 
 bs = Stop(city='essen', name='borbeck süd bf')
-bo = Stop(city='essen', name='hbf')
+result = vrr.stops.get(bs)
+code.interact(local=locals())
+
+
+# bo = Stop(city='essen', name='hbf')
 # bo = Stop(city='heidelberg', name='hbf')
 
-trip = Trip.Request()
-trip.origin = bs
-trip.destination = bo
+# trip = Trip.Request()
+# trip.origin = bs
+# trip.destination = bo
 
-location = Location.Request()
-location.name = 'Borbeck'
+# location = Location.Request()
+# location.name = 'Borbeck'
 
-vrr.dump_raw = True
-result = vrr.query(trip)
+# vrr.dump_raw = True
+# result = vrr.query(trip)
 
 # import pprint
 # pp = pprint.PrettyPrinter(indent=1)
 # pp.pprint(result.serialize())
 # print(result.results)
-serialized = json.dumps(result.serialize(no_duplicates=[]), indent=2)
-print(serialized)
+# serialized = json.dumps(result.serialize(no_duplicates=[]), indent=2)
+# print(serialized)
