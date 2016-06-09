@@ -1,4 +1,4 @@
-from ..base import Field, Model
+from ..models.base import Field, Model
 from collections import ChainMap, OrderedDict
 from itertools import chain
 

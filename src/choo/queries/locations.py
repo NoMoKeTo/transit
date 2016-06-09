@@ -1,4 +1,4 @@
-from ..locations import Stop
+from ..models import Stop
 from .base import Query
 
 

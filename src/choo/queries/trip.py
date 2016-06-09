@@ -1,4 +1,4 @@
-from ..trip import Trip
+from ..models import Trip
 from .base import Query
 
 
