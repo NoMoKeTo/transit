@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from ..exceptions import ObjectNotFound
+from typing import Mapping, Union, Iterable
 
 
 class Field:
@@ -92,3 +93,7 @@ class Model(metaclass=MetaModel):
                 continue
             data = (name, val if isinstance([int, float, str, dict, list]) else val.serialize())
         return OrderedDict(data)
+
+
+class ModelWithIDsMixin:
+    ids = Field(Mapping[str, Union[str, Iterable[str]]])

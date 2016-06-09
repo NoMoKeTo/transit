@@ -1,14 +1,14 @@
 from typing import Union
 
 from ..types import Coordinates
-from .base import Field, Model
+from .base import Field, Model, ModelWithIDsMixin
 
 
 class Location(Model):
     coords = Field(Coordinates)
 
 
-class Platform(Location):
+class Platform(Location, ModelWithIDsMixin):
     stop = Field(Union['Stop'])
     ifopt = Field(str)
     name = Field(str)
@@ -60,7 +60,7 @@ class Address(Location):
         return None
 
 
-class Stop(Address):
+class Stop(Address, ModelWithIDsMixin):
     ifopt = Field(str)
     uic = Field(str)
     name = Field(str)
