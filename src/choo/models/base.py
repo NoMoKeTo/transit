@@ -89,10 +89,10 @@ class MetaModel(type):
 
         if issubclass(cls, DynamicModel):
             for name in cls._fields:
-                if not hasattr(cls, name):
+                if isinstance(getattr(cls, name), Field):
                     setattr(cls, name, choo_property(give_none, name))
         else:
-            cls.Dynamic = type('Dynamic', (DynamicModel, ), {'__module__': attrs['__module__'], 'Model': cls})
+            cls.Dynamic = type('Dynamic', (DynamicModel, cls), {'__module__': attrs['__module__'], 'Model': cls})
         return cls
 
 
