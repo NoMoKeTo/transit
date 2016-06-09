@@ -84,7 +84,10 @@ class EFA(API):
             return 'none', ()
 
         if n.attrib['state'] == 'identified':
-            return odvtype, (self._parse_location_name(n.find('./odvNameElem'), city, cityid, odvtype), )
+            ne = n.find('./odvNameElem')
+            # AnyTypes are used in some EFA instances instead of ODV types
+            odvtype = ne.attrib.get('anyType', odvtype)
+            return odvtype, (self._parse_location_name(ne, city, cityid, odvtype), )
 
         if n.attrib['state'] != 'list':
             return 'none', ()
@@ -95,8 +98,6 @@ class EFA(API):
 
     def _parse_location_name(self, data, city, cityid, odvtype):
         """ Parses the odvNameElem of an ODV """
-        # AnyTypes are used in some EFA instances instead of ODV types
-        odvtype = data.attrib.get('anyType', odvtype)
         if odvtype == 'stop':
             return OdvNameElemStop(self, data, city)
         elif odvtype == 'poi':

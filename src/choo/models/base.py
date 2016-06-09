@@ -87,12 +87,13 @@ class MetaModel(type):
             key=lambda v: v[1].i)
         ))
 
-        if issubclass(cls, DynamicModel):
-            for name in cls._fields:
-                if isinstance(getattr(cls, name), Field):
-                    setattr(cls, name, choo_property(give_none, name))
-        else:
+        if not issubclass(cls, DynamicModel):
             cls.Dynamic = type('Dynamic', (DynamicModel, cls), {'__module__': attrs['__module__'], 'Model': cls})
+        elif DynamicModel not in cls.__bases__:
+            for name, field in cls._fields.items():
+                if getattr(cls, name) is field:
+                    setattr(cls, name, choo_property(give_none, name))
+
         return cls
 
 

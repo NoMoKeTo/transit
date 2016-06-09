@@ -19,9 +19,7 @@ class StopQuery(queries.StopQuery):
         xml, servernow = self.network._request('XML_STOPFINDER_REQUEST', post)
         data = xml.find('./itdStopFinderRequest')
 
-        # abc
         odvtype, results = self.network._parse_location(data.find('./itdOdv'))
-        print(odvtype)
         if odvtype == 'stop':
             return results
 
