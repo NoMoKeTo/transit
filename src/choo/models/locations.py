@@ -91,7 +91,7 @@ class Stop(Address, ModelWithIDsMixin):
         return None
 
 
-class POI(Address):
+class POI(Address, ModelWithIDsMixin):
     name = Field(str)
 
     def __init__(self, country=None, city=None, name=None, **kwargs):
