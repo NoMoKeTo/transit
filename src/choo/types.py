@@ -19,8 +19,7 @@ class Coordinates:
                 self.lon is not None and other.lon == self.lon)
 
     def __repr__(self):
-        pass
-        # return 'GeoLocation(%.6f, %.6f)' % (self.lat, self.lon)
+        return 'Coordinates(%.6f, %.6f)' % (self.lat, self.lon)
 
     def _near(self, other):
         return (abs(self.lat - other.lat) < 0.02 and
