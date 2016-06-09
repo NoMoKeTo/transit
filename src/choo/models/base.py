@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from ..exceptions import ObjectNotFound
 from typing import Mapping, Union, Iterable, Optional
+from ..apis.base import XMLParser, JSONParser, Parser, parser_property
 
 
 class Field:
@@ -42,36 +43,8 @@ class Field:
             raise AttributeError('Attribute %s is not set.' % self.name)
 
 
-class choo_property(object):
-    def __init__(self, func, name=None):
-        self.func = func
-        self.name = name or func.__name__
-
-    def __get__(self, obj, cls):
-        if obj is None:
-            return self
-        field = obj.Model._fields[self.name]
-        value = obj.__dict__[self.name] = self.func(obj)
-
-        if not field.validate(value):
-            raise TypeError('Invalid type for attribute %s.' % self.name)
-
-        return value
-
-    def __set__(self, obj, value):
-        raise AttributeError("can't set a choo property")
-
-    def __delete__(self, obj):
-        raise AttributeError("can't delete a choo property")
-
-
-def give_none(self):
+def give_none(self, *args, **kwargs):
     return None
-
-
-class DynamicModel:
-    def __init__(self):
-        pass
 
 
 class MetaModel(type):
@@ -87,12 +60,13 @@ class MetaModel(type):
             key=lambda v: v[1].i)
         ))
 
-        if not issubclass(cls, DynamicModel):
-            cls.Dynamic = type('Dynamic', (DynamicModel, cls), {'__module__': attrs['__module__'], 'Model': cls})
-        elif DynamicModel not in cls.__bases__:
+        if not issubclass(cls, Parser):
+            cls.XMLParser = type('XMLParser', (XMLParser, cls), {'__module__': attrs['__module__'], 'Model': cls})
+            cls.JSONParser = type('JSONParser', (JSONParser, cls), {'__module__': attrs['__module__'], 'Model': cls})
+        elif Parser not in sum([b.__bases__ for b in cls.__bases__], ()):
             for name, field in cls._fields.items():
                 if getattr(cls, name) is field:
-                    setattr(cls, name, choo_property(give_none, name))
+                    setattr(cls, name, parser_property(give_none, name))
 
         return cls
 

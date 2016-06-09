@@ -1,12 +1,13 @@
 from ....models import Stop, Location, POI, Address
-from ....models.base import choo_property
+from ....models.base import parser_property
 from ....types import Coordinates
+from ...base import XMLParser
 
 
-class OdvLocationList:
-    def __init__(self, network, xml):
-        self.network = network
-        self.type, self.generator = self._parse_location(xml)
+class OdvLocationList(XMLParser):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.type, self.generator = self._parse_location(self.data)
 
     def _parse_location(self, data):
         """ Parse an ODV (OriginDestinationVia) XML node """
@@ -19,7 +20,7 @@ class OdvLocationList:
             city = None
         elif p.attrib['state'] != 'identified':
             if p.attrib['state'] == 'list':
-                return 'cities', (CityOnlyOdvStop(self, item) for item in p.find('./odvPlaceElem'))
+                return 'cities', (CityOnlyOdvStop(self, city) for city in p.find('./odvPlaceElem'))
             return 'none', ()
         else:
             city = p.find('./odvPlaceElem').text
@@ -47,11 +48,11 @@ class OdvLocationList:
     def _parse_location_name(self, data, city, cityid, odvtype):
         """ Parses the odvNameElem of an ODV """
         if odvtype == 'stop':
-            return OdvNameElemStop(self.network, data, city)
+            return OdvNameElemStop(self, data, city)
         elif odvtype == 'poi':
-            return OdvNameElemPOI(self.network, data, city)
+            return OdvNameElemPOI(self, data, city)
         elif odvtype in ('street', 'singlehouse', 'coord', 'address'):
-            return OdvNameElemAddress(self.network, data, city)
+            return OdvNameElemAddress(self, data, city)
         else:
             raise NotImplementedError('Unknown odvtype: %s' % odvtype)
 
@@ -59,63 +60,58 @@ class OdvLocationList:
         yield from self.generator
 
 
-class CityOnlyOdvStop(Stop.Dynamic):
+class CityOnlyOdvStop(Stop.XMLParser):
     def __init__(self, network, xml):
         self.network = network
         self._xml = xml
 
-    @choo_property
+    @parser_property
     def city(self):
         return self._xml.text
 
 
-class OdvNameElemLocation(Location.Dynamic):
-    def __init__(self, network, xml, city):
-        self.network = network
-        self._xml = xml
-        self._city = city
-
-    @choo_property
-    def ids(self):
-        myid = self._xml.attrib.get('stopID') or self._xml.attrib.get('id')
+class OdvNameElemLocation(Location.XMLParser):
+    @parser_property
+    def ids(self, data, city):
+        myid = data.attrib.get('stopID') or data.attrib.get('id')
         return myid and {self.network.name: myid}
 
-    @choo_property
-    def city(self):
-        return self._xml.attrib.get('locality', self._city)
+    @parser_property
+    def city(self, data, city):
+        return data.attrib.get('locality', self._city)
 
-    @choo_property
-    def name(self):
-        return self._xml.attrib.get('objectName', self._xml.text)
+    @parser_property
+    def name(self, data, city):
+        return data.attrib.get('objectName', data.text)
 
-    @choo_property
-    def coords(self):
-        if 'x' not in self._xml.attrib:
+    @parser_property
+    def coords(self, data, city):
+        if 'x' not in data.attrib:
             return None
-        return Coordinates(float(self._xml.attrib['y']) / 1000000,
-                           float(self._xml.attrib['x']) / 1000000)
+        return Coordinates(float(data.attrib['y']) / 1000000,
+                           float(data.attrib['x']) / 1000000)
 
 
-class OdvNameElemStop(Stop.Dynamic, OdvNameElemLocation):
+class OdvNameElemStop(Stop.XMLParser, OdvNameElemLocation):
     pass
 
 
-class OdvNameElemPOI(POI.Dynamic, OdvNameElemLocation):
+class OdvNameElemPOI(POI.XMLParser, OdvNameElemLocation):
     pass
 
 
-class OdvNameElemAddress(Address.Dynamic, OdvNameElemLocation):
-    @choo_property
-    def street(self):
-        return self._xml.attrib.get('streetName')
+class OdvNameElemAddress(Address.XMLParser, OdvNameElemLocation):
+    @parser_property
+    def street(self, data, city):
+        return data.attrib.get('streetName')
 
-    @choo_property
-    def number(self):
-        return self._xml.attrib.get('buildingNumber') or self._xml.attrib.get('houseNumber')
+    @parser_property
+    def number(self, data, city):
+        return data.attrib.get('buildingNumber') or data.attrib.get('houseNumber')
 
-    @choo_property
-    def name(self):
-        name = self._xml.attrib.get('objectName', self._xml.text)
+    @parser_property
+    def name(self, data, city):
+        name = data.attrib.get('objectName', data.text)
         if name is not None:
             return name
         return '%s %s' % (self.street, self.number)

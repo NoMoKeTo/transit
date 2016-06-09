@@ -17,10 +17,10 @@ class StopQuery(queries.StopQuery):
         }
         post.update(self.network._convert_location(self, '%s_sf'))
 
-        xml, servernow = self.network._request('XML_STOPFINDER_REQUEST', post)
+        xml, self.time = self.network._request('XML_STOPFINDER_REQUEST', post)
         data = xml.find('./itdStopFinderRequest')
 
-        results = OdvLocationList(self.network, data.find('./itdOdv'))
+        results = OdvLocationList(self, data.find('./itdOdv'))
 
         if results.type == 'stop':
             return results
