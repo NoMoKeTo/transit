@@ -1,10 +1,9 @@
 from datetime import timedelta
 from typing import Iterable
-from ..types import Coordinates, LineTypes, WayEvent, WayType
+from ..types import Coordinates, LineTypes, WayEvent, WayType, LiveTime
 from .base import Field, Model
 from .locations import Location
 from .tickets import TicketList
-from ..types import LiveTime
 
 RideSegment = 1
 

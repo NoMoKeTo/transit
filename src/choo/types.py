@@ -135,6 +135,15 @@ class WayEvent(HierarchicEnumMixin, Enum):
         return 'WayEvent.' + self.name
 
 
+class WalkSpeed(Enum):
+    normal = 'normal'
+    fast = 'fast'
+    slow = 'slow'
+
+    def __repr__(self):
+        return 'WalkSpeed.' + self.name
+
+
 class LineType(HierarchicEnumMixin, Enum):
     any = '_'
 
