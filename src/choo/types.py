@@ -6,7 +6,9 @@ class Coordinates:
     def __init__(self, lat, lon, **kwargs):
         if lat is None or lon is None:
             raise ValueError('latitude and longitude has to be not None')
-        super().__init__(lat=lat, lon=lon, **kwargs)
+        self.lat = lat
+        self.lon = lon
+        super().__init__(**kwargs)
 
     def __iter__(self):
         return iter([self.lat, self.lon])
