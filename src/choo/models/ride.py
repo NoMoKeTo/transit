@@ -2,7 +2,7 @@ from typing import Iterable
 
 from ..types import LineType, LiveTime
 from .base import Field, Model
-from .locations import Platform, Stop, ModelWithIDs
+from .locations import ModelWithIDs, Platform, Stop
 
 
 class Line(ModelWithIDs):

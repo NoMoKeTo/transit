@@ -1,6 +1,7 @@
-from ..models.base import Field, Model
 from collections import ChainMap, OrderedDict
 from itertools import chain
+
+from ..models.base import Field, Model
 
 
 class MetaQuery(type):

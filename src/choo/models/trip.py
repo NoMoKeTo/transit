@@ -1,6 +1,7 @@
 from datetime import timedelta
 from typing import Iterable
-from ..types import Coordinates, LineTypes, WayEvent, WayType, LiveTime
+
+from ..types import Coordinates, LineTypes, LiveTime, WayEvent, WayType
 from .base import Field, Model
 from .locations import Location
 from .tickets import TicketList

@@ -1,7 +1,8 @@
 from collections import OrderedDict
+from typing import Iterable, Mapping, Optional, Union
+
+from ..apis.base import JSONParser, Parser, XMLParser, parser_property
 from ..exceptions import ObjectNotFound
-from typing import Mapping, Union, Iterable, Optional
-from ..apis.base import XMLParser, JSONParser, Parser, parser_property
 
 
 class Field:

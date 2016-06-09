@@ -1,4 +1,4 @@
-from ....models import Stop, Location, POI, Address
+from ....models import POI, Address, Location, Stop
 from ....models.base import parser_property
 from ....types import Coordinates
 from ...base import XMLParser
