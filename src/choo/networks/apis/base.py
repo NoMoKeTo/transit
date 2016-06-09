@@ -1,34 +1,20 @@
-from ...models import Searchable
-from weakref import WeakValueDictionary
+class API:
+    StopQuery = None
+    TripQuery = None
 
-
-class API():
-    def __init__(self, name, dump_raw=False):
+    def __init__(self, name):
+        if self.__class__ == API:
+            raise TypeError('Only API subclasses can be initialized.')
         self.name = name
-        self.dump_raw = dump_raw
 
-    def query(self, obj):
-        if isinstance(obj, Searchable):
-            result, now = self._query_get(obj)
-        elif isinstance(obj, Searchable.Request):
-            result, now = self._query_search(obj.Model, obj)
-        else:
-            raise TypeError('can only query Searchable or Searchable.Request')
+    @property
+    def stops(self):
+        if self.StopQuery is None:
+            raise NotImplementedError('Querying stops is not supported by this network.')
+        return self.StopQuery(self)
 
-        collect = WeakValueDictionary({})
-        newresult = result.apply_recursive(time=now, source=self.name, collect=collect)
-
-        for key, value in collect.items():
-            if key[0] == 'Stop':
-                self._finalize_stop(value)
-
-        return result if newresult is None else newresult
-
-    def _query_get(self, obj):
-        raise NotImplementedError
-
-    def _query_search(self, model, request):
-        raise NotImplementedError
-
-    def _finalize_stop(self, stop):
-        pass
+    @property
+    def trips(self):
+        if self.TripQuery is None:
+            raise NotImplementedError('Querying trips is not supported by this network.')
+        return self.TripQuery(self)
