@@ -78,7 +78,7 @@ class OdvNameElemLocation(Location.XMLParser):
 
     @parser_property
     def city(self, data, city):
-        return data.attrib.get('locality', self._city)
+        return data.attrib.get('locality', city)
 
     @parser_property
     def name(self, data, city):
